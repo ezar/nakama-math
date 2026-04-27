@@ -45,7 +45,7 @@ export function RankingScreen({ onBack }: RankingScreenProps) {
   }
 
   return (
-    <div className="h-full overflow-hidden bg-navy-900 flex flex-col items-center p-4">
+    <div className="h-full overflow-hidden bg-navy-900 flex flex-col items-center p-4 pb-10">
       <div className="w-full max-w-md flex flex-col h-full min-h-0">
 
         {/* Header */}

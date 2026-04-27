@@ -5,6 +5,7 @@ import { HubScreen } from './screens/HubScreen'
 import { GameScreen } from './screens/GameScreen'
 import { ResultsScreen } from './screens/ResultsScreen'
 import { RankingScreen } from './screens/RankingScreen'
+import { SplashScreen } from './screens/SplashScreen'
 import { Footer } from './components/Footer'
 
 type Screen = 'intro' | 'hub' | 'game' | 'results' | 'ranking'
@@ -17,9 +18,11 @@ const screenVariants = {
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('intro')
+  const [splashDone, setSplashDone] = useState(false)
 
   return (
     <div className="h-dvh overflow-hidden bg-navy-900 text-white font-nunito flex flex-col safe-top safe-left safe-right">
+      {!splashDone && <SplashScreen onDone={() => setSplashDone(true)} />}
       <AnimatePresence mode="wait">
         <motion.div
           key={screen}
