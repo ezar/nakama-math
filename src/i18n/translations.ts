@@ -48,6 +48,16 @@ export interface Translations {
   soundOn: string
   soundOff: string
 
+  exitGame: string
+  exitConfirm: string
+  activeLevel: string
+  berriesPerCorrect: (n: number) => string
+  gamesPlayed: string
+  precision: string
+  bestStreakShort: string
+  nextRank: (name: string, berries: number) => string
+  maxRankReached: string
+
   ranks: string[]
 }
 
@@ -93,6 +103,15 @@ export const translations: Record<Locale, Translations> = {
     sound: 'Sonido',
     soundOn: 'Activado',
     soundOff: 'Desactivado',
+    exitGame: '✕ Salir',
+    exitConfirm: '¿Abandonar la partida?',
+    activeLevel: 'Nivel activo',
+    berriesPerCorrect: (n) => `+${n} 🪙 por acierto`,
+    gamesPlayed: 'partidas',
+    precision: 'precisión',
+    bestStreakShort: 'mejor racha',
+    nextRank: (name, berries) => `Faltan ${berries.toLocaleString()} 🪙 para ${name}`,
+    maxRankReached: '¡Rango máximo alcanzado! 👑',
     ranks: ['Grumete', 'Marinero', 'Pirata', 'Primer Oficial', 'Capitán', 'Shichibukai', 'Yonko', 'Rey Pirata'],
   },
 
@@ -137,6 +156,15 @@ export const translations: Record<Locale, Translations> = {
     sound: 'Sound',
     soundOn: 'On',
     soundOff: 'Off',
+    exitGame: '✕ Exit',
+    exitConfirm: 'Abandon this game?',
+    activeLevel: 'Active level',
+    berriesPerCorrect: (n) => `+${n} 🪙 per correct`,
+    gamesPlayed: 'games',
+    precision: 'accuracy',
+    bestStreakShort: 'best streak',
+    nextRank: (name, berries) => `${berries.toLocaleString()} 🪙 to reach ${name}`,
+    maxRankReached: 'Max rank reached! 👑',
     ranks: ['Cabin Boy', 'Sailor', 'Pirate', 'First Mate', 'Captain', 'Warlord', 'Emperor', 'Pirate King'],
   },
 
@@ -181,6 +209,15 @@ export const translations: Record<Locale, Translations> = {
     sound: 'So',
     soundOn: 'Activat',
     soundOff: 'Desactivat',
+    exitGame: '✕ Sortir',
+    exitConfirm: 'Abandonar la partida?',
+    activeLevel: 'Nivell actiu',
+    berriesPerCorrect: (n) => `+${n} 🪙 per encert`,
+    gamesPlayed: 'partides',
+    precision: 'precisió',
+    bestStreakShort: 'millor ratxa',
+    nextRank: (name, berries) => `Falten ${berries.toLocaleString()} 🪙 per a ${name}`,
+    maxRankReached: 'Rang màxim assolit! 👑',
     ranks: ['Grumete', 'Mariner', 'Pirata', 'Primer Oficial', 'Capità', 'Shichibukai', 'Yonko', 'Rei Pirata'],
   },
 }

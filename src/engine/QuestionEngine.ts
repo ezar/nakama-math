@@ -39,10 +39,14 @@ function pickOperands(op: Operation, c: LevelConfig['constraints']): [number, nu
     case 'frac': {
       const dens = c.fracDenominators ?? [2, 4]
       const den = dens[rnd(0, dens.length - 1)]
-      // pick a whole number that is a multiple of den so result is integer
-      const maxMultiple = Math.max(1, Math.floor(c.maxA / den))
-      const whole = rnd(1, maxMultiple) * den
-      return [whole, den]
+      // pick numerator < den (proper fraction, num/den)
+      const num = rnd(1, den - 1)
+      // pick whole so that whole * num is divisible by den → integer result
+      const factor = den / gcd(num, den)
+      const maxWhole = Math.max(factor, Math.floor(c.maxA / factor)) * factor
+      const whole = rnd(1, Math.max(1, Math.floor(maxWhole / factor))) * factor
+      // encode as [whole * 1000 + num, den] to carry num+den through compute
+      return [whole * 1000 + num, den]
     }
     case 'pct': {
       const vals = c.pctValues ?? [10, 25, 50]
@@ -75,7 +79,12 @@ export function compute(op: Operation, a: number, b: number): number {
     case 'sub': return a - b
     case 'mul': return a * b
     case 'div': return a / b
-    case 'frac': return Math.round((a / b))
+    case 'frac': {
+      // a encodes whole*1000+num, b is den
+      const whole = Math.floor(a / 1000)
+      const num = a % 1000
+      return (whole * num) / b   // always integer by construction
+    }
     case 'pct': return Math.round((a * b) / 100)
     case 'exp': return Math.pow(a, b)
   }
@@ -84,7 +93,12 @@ export function compute(op: Operation, a: number, b: number): number {
 function buildDisplay(op: Operation, a: number, b: number): string {
   if (op === 'pct') return `${b}% de ${a} = ?`
   if (op === 'exp') return `${a}${b === 2 ? '²' : b === 3 ? '³' : `^${b}`} = ?`
-  if (op === 'frac') return `${a} ÷ ${b} = ?`
+  if (op === 'frac') {
+    const whole = Math.floor(a / 1000)
+    const num = a % 1000
+    const fracStr = num === 1 ? `1/${b}` : `${num}/${b}`
+    return `${fracStr} de ${whole} = ?`
+  }
   const symbols: Record<string, string> = { add: '+', sub: '−', mul: '×', div: '÷' }
   return `${a} ${symbols[op]} ${b} = ?`
 }
@@ -121,12 +135,14 @@ function generateDecoys(op: Operation, a: number, b: number, correct: number): n
       add(correct + b)
       add(correct - b)
       break
-    case 'frac':
-      add(a)
-      add(b)
+    case 'frac': {
+      const whole = Math.floor(a / 1000)
+      add(whole)             // forgot to multiply by fraction
+      add(correct * b)       // multiplied instead of fraction
       add(correct + b)
       add(correct * 2)
       break
+    }
     case 'pct':
       add(Math.round(a * b / 10))
       add(a * b)

@@ -15,9 +15,10 @@ type AnswerState = 'idle' | 'correct' | 'wrong'
 
 interface GameScreenProps {
   onFinish: () => void
+  onExit: () => void
 }
 
-export function GameScreen({ onFinish }: GameScreenProps) {
+export function GameScreen({ onFinish, onExit }: GameScreenProps) {
   const t = useTranslation()
   const shouldReduceMotion = useReducedMotion()
   const { play } = useSoundEffect()
@@ -25,20 +26,20 @@ export function GameScreen({ onFinish }: GameScreenProps) {
   const {
     config, questions, currentIndex,
     streak, lives,
-    answerQuestion, loseLife, nextQuestion, finishGame,
+    answerQuestion, loseLife, nextQuestion, finishGame, resetGame,
   } = useGameStore()
 
   const [answerStates, setAnswerStates] = useState<Record<string, AnswerState>>({})
   const [feedback, setFeedback] = useState<string | null>(null)
   const [timeLeft, setTimeLeft] = useState<number | null>(null)
   const [locked, setLocked] = useState(false)
+  const [showExitConfirm, setShowExitConfirm] = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null)
 
   const isSurvival = config?.mode === 'survival'
   const hasTimer = !!config?.timePerQuestion
 
-  // Resolve current question (survival generates new ones on the fly)
   useEffect(() => {
     if (!config) return
     if (isSurvival) {
@@ -53,21 +54,15 @@ export function GameScreen({ onFinish }: GameScreenProps) {
     if (config.timePerQuestion) setTimeLeft(config.timePerQuestion)
   }, [currentIndex, config, isSurvival, questions])
 
-  // Timer
   useEffect(() => {
     if (!hasTimer || !timeLeft || locked) return
     if (timeLeft <= 3 && timeLeft > 0) play('tick')
-
     timerRef.current = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev === null || prev <= 1) return 0
-        return prev - 1
-      })
+      setTimeLeft(prev => (prev === null || prev <= 1) ? 0 : prev - 1)
     }, 1000)
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [timeLeft, hasTimer, locked, play])
 
-  // Time up
   useEffect(() => {
     if (timeLeft !== 0) return
     if (locked) return
@@ -151,8 +146,14 @@ export function GameScreen({ onFinish }: GameScreenProps) {
     }
   }
 
+  function handleExit() {
+    if (timerRef.current) clearInterval(timerRef.current)
+    resetGame()
+    onExit()
+  }
+
   if (!currentQuestion || !config) return (
-    <div className="min-h-screen bg-navy-900 flex items-center justify-center">
+    <div className="h-full flex items-center justify-center bg-navy-900">
       <p className="font-nunito text-white">{t.loadingChallenge}</p>
     </div>
   )
@@ -160,13 +161,22 @@ export function GameScreen({ onFinish }: GameScreenProps) {
   const progress = isSurvival ? null : ((currentIndex + 1) / config.totalQuestions)
 
   return (
-    <div className="min-h-screen bg-navy-900 flex flex-col items-center p-4 pt-6">
-      <div className="w-full max-w-md flex flex-col gap-4">
+    <div className="h-full bg-navy-900 flex flex-col items-center px-4 pt-4 pb-2">
+      <div className="w-full max-w-md flex flex-col gap-3 h-full">
 
-        {/* Top bar */}
-        <div className="flex items-center justify-between">
+        {/* Top bar: exit + progress + streak */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowExitConfirm(true)}
+            aria-label={t.exitGame}
+            className="font-nunito text-xs text-gray-500 hover:text-pirate-red transition-colors shrink-0"
+          >
+            ✕
+          </button>
           {isSurvival ? (
-            <HpBar current={lives} max={config.livesCount ?? 3} />
+            <div className="flex-1">
+              <HpBar current={lives} max={config.livesCount ?? 3} />
+            </div>
           ) : (
             <div className="flex-1 h-2 bg-navy-700 rounded-full overflow-hidden">
               {progress !== null && (
@@ -197,36 +207,40 @@ export function GameScreen({ onFinish }: GameScreenProps) {
 
         {/* Timer */}
         {hasTimer && timeLeft !== null && (
-          <div className={`text-center font-bangers text-4xl ${timeLeft <= 3 ? 'text-pirate-red animate-pulse' : 'text-gold-400'}`}>
+          <div className={`text-center font-bangers text-4xl leading-none ${timeLeft <= 3 ? 'text-pirate-red animate-pulse' : 'text-gold-400'}`}>
             {timeLeft}
           </div>
         )}
 
-        {/* Question */}
-        <AnimatePresence mode="wait">
-          <QuestionCard key={currentQuestion.id} question={currentQuestion} />
-        </AnimatePresence>
+        {/* Question — grows to fill available space */}
+        <div className="flex-1 flex flex-col justify-center min-h-0">
+          <AnimatePresence mode="wait">
+            <QuestionCard key={currentQuestion.id} question={currentQuestion} />
+          </AnimatePresence>
+        </div>
 
         {/* Feedback */}
-        <AnimatePresence mode="wait">
-          {feedback && (
-            <motion.p
-              key={feedback + currentIndex}
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="text-center font-bangers text-3xl text-gold-400"
-            >
-              {feedback}
-            </motion.p>
-          )}
-        </AnimatePresence>
+        <div className="h-9 flex items-center justify-center">
+          <AnimatePresence mode="wait">
+            {feedback && (
+              <motion.p
+                key={feedback + currentIndex}
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="text-center font-bangers text-3xl text-gold-400 leading-none"
+              >
+                {feedback}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* Answers */}
         <div className="grid grid-cols-2 gap-3">
           {currentQuestion.allAnswers.map(a => (
             <AnswerButton
-              key={a}
+              key={`${currentQuestion.id}-${a}`}
               label={a}
               state={answerStates[a] ?? 'idle'}
               disabled={locked}
@@ -235,18 +249,46 @@ export function GameScreen({ onFinish }: GameScreenProps) {
           ))}
         </div>
 
-        {/* Question counter */}
-        {!isSurvival && (
-          <p className="text-center font-nunito text-xs text-gray-500">
-            {currentIndex + 1} / {config.totalQuestions}
-          </p>
-        )}
-        {isSurvival && (
-          <p className="text-center font-nunito text-xs text-gray-500">
-            {t.lives(lives)}
-          </p>
-        )}
+        {/* Counter */}
+        <p className="text-center font-nunito text-xs text-gray-500 pb-1">
+          {isSurvival ? t.lives(lives) : `${currentIndex + 1} / ${config.totalQuestions}`}
+        </p>
       </div>
+
+      {/* Exit confirmation modal */}
+      <AnimatePresence>
+        {showExitConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.8 }}
+              className="bg-navy-800 rounded-3xl p-6 w-full max-w-xs border border-navy-600 shadow-2xl text-center"
+            >
+              <p className="font-nunito font-bold text-white mb-6">{t.exitConfirm}</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowExitConfirm(false)}
+                  className="flex-1 py-3 rounded-xl font-nunito font-bold text-gray-400 hover:text-white border border-navy-600 transition-colors"
+                >
+                  {t.cancel}
+                </button>
+                <button
+                  onClick={handleExit}
+                  className="flex-1 py-3 rounded-xl font-nunito font-bold bg-pirate-red text-white hover:bg-pirate-red-dark transition-colors"
+                >
+                  {t.exitGame}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react'
-import { motion } from 'framer-motion'
+import { useEffect, useRef, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '../store/gameStore'
 import { useProfileStore } from '../store/profileStore'
 import { useTranslation } from '../i18n/useTranslation'
@@ -19,6 +19,7 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
   const { currentProfile, addBerries, updateStats } = useProfileStore()
   const profile = currentProfile()
   const committed = useRef(false)
+  const [showRankUp, setShowRankUp] = useState(false)
 
   useEffect(() => {
     if (!lastResult || !profile || committed.current) return
@@ -32,6 +33,7 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
 
     if (newRank > oldRank) {
       play('rankUp')
+      setShowRankUp(true)
     }
   }, [lastResult, profile, addBerries, updateStats, play])
 
@@ -48,7 +50,7 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
   ]
 
   return (
-    <div className="min-h-screen bg-navy-900 flex flex-col items-center justify-center p-6">
+    <div className="h-full overflow-y-auto bg-navy-900 flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-md flex flex-col items-center gap-6">
 
         <motion.h1
@@ -59,6 +61,25 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
         >
           {won ? t.victory : t.defeat}
         </motion.h1>
+
+        <AnimatePresence>
+          {showRankUp && (
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0, y: -20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, delay: 0.3 }}
+              className="w-full py-3 px-4 rounded-2xl bg-gold-400/20 border-2 border-gold-400 text-center"
+            >
+              <p className="font-bangers text-2xl text-gold-400 tracking-widest">{t.rankUp}</p>
+              {updatedProfile && (
+                <p className="font-nunito text-sm text-gold-400 mt-1">
+                  {updatedProfile.name} → <RankBadge berries={updatedProfile.berries} className="inline-flex" />
+                </p>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Profile + rank */}
         {updatedProfile && (

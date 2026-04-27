@@ -47,7 +47,7 @@ export function RankingScreen({ onBack }: RankingScreenProps) {
   }
 
   return (
-    <div className="min-h-screen bg-navy-900 flex flex-col items-center p-6">
+    <div className="h-full overflow-y-auto bg-navy-900 flex flex-col items-center p-6">
       <div className="w-full max-w-md">
         <div className="flex items-center gap-4 mb-6">
           <button

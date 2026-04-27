@@ -3,8 +3,9 @@ import { useProfileStore } from '../store/profileStore'
 import { useGameStore } from '../store/gameStore'
 import { useTranslation } from '../i18n/useTranslation'
 import { RankBadge } from '../components/RankBadge'
-import { getUnlockedLevels, getLevelById } from '../config/levels'
+import { getUnlockedLevels, getLevelById, LEVELS } from '../config/levels'
 import { generateQuestion } from '../engine/QuestionEngine'
+import { getRankIndex, getNextRankBerries } from '../utils/rankSystem'
 import type { GameMode, GameConfig } from '../engine/types'
 
 const MODE_CONFIGS: Record<GameMode, { icon: string; questions: number; timePerQuestion?: number; livesCount?: number; multiplier: number }> = {
@@ -21,13 +22,22 @@ interface HubScreenProps {
 
 export function HubScreen({ onPlay, onBack }: HubScreenProps) {
   const t = useTranslation()
-  const profile = useProfileStore(s => s.currentProfile())
+  const profile = useProfileStore(s => s.profiles.find(p => p.id === s.currentProfileId) ?? null)
   const { startGame } = useGameStore()
 
   if (!profile) return null
 
   const unlockedLevels = getUnlockedLevels(profile.berries)
   const currentLevel = unlockedLevels[unlockedLevels.length - 1]
+
+  // Progress to next rank
+  const rankIdx = getRankIndex(profile.berries)
+  const nextBerries = getNextRankBerries(profile.berries)
+  const nextLevel = LEVELS[rankIdx + 1]
+  const prevThreshold = LEVELS[rankIdx]?.xpToUnlock ?? 0
+  const progressPct = nextBerries
+    ? Math.min(100, ((profile.berries - prevThreshold) / (nextBerries - prevThreshold)) * 100)
+    : 100
 
   function handleMode(mode: GameMode) {
     if (!profile) return
@@ -55,10 +65,10 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
   const modes: GameMode[] = ['normal', 'speed', 'survival', 'blitz']
 
   return (
-    <div className="min-h-screen bg-navy-900 flex flex-col items-center p-6">
+    <div className="h-full overflow-y-auto bg-navy-900 flex flex-col items-center p-6">
       <div className="w-full max-w-md">
         {/* Back + profile header */}
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex items-center gap-4 mb-6">
           <button
             onClick={onBack}
             aria-label="Volver"
@@ -68,7 +78,7 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
           </button>
           <div className="flex items-center gap-3 flex-1">
             <span className="text-4xl">{profile.avatar}</span>
-            <div>
+            <div className="flex-1">
               <p className="font-nunito font-bold text-white">{profile.name}</p>
               <div className="flex items-center gap-2">
                 <RankBadge berries={profile.berries} />
@@ -78,16 +88,36 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
           </div>
         </div>
 
+        {/* Progress to next rank */}
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-1">
+            <span className="font-nunito text-xs text-gray-400">
+              {nextBerries
+                ? t.nextRank(nextLevel?.name ?? '', nextBerries - profile.berries)
+                : t.maxRankReached}
+            </span>
+            <span className="font-nunito text-xs text-gold-400">{Math.round(progressPct)}%</span>
+          </div>
+          <div className="h-2 bg-navy-700 rounded-full overflow-hidden">
+            <motion.div
+              className="h-full bg-gold-400 rounded-full"
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPct}%` }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
+            />
+          </div>
+        </div>
+
         {/* Level info */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-navy-700 rounded-2xl p-4 mb-6 border border-navy-600"
         >
-          <p className="font-nunito text-gray-400 text-xs mb-1">Nivel activo</p>
+          <p className="font-nunito text-gray-400 text-xs mb-1">{t.activeLevel}</p>
           <p className="font-bangers text-2xl text-gold-400">{currentLevel.name}</p>
           <p className="font-nunito text-sm text-gray-300">{currentLevel.opLabel}</p>
-          <p className="font-nunito text-xs text-gold-400 mt-1">+{currentLevel.berriesPerCorrect} 🪙 por acierto</p>
+          <p className="font-nunito text-xs text-gold-400 mt-1">{t.berriesPerCorrect(currentLevel.berriesPerCorrect)}</p>
         </motion.div>
 
         {/* Mode buttons */}
@@ -119,7 +149,7 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
         <div className="grid grid-cols-3 gap-3 mt-6">
           <div className="bg-navy-800 rounded-xl p-3 text-center">
             <p className="font-bangers text-2xl text-white">{profile.stats.gamesPlayed}</p>
-            <p className="font-nunito text-xs text-gray-500">partidas</p>
+            <p className="font-nunito text-xs text-gray-500">{t.gamesPlayed}</p>
           </div>
           <div className="bg-navy-800 rounded-xl p-3 text-center">
             <p className="font-bangers text-2xl text-white">
@@ -127,11 +157,11 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
                 ? Math.round((profile.stats.totalCorrect / profile.stats.totalAttempted) * 100)
                 : 0}%
             </p>
-            <p className="font-nunito text-xs text-gray-500">precisión</p>
+            <p className="font-nunito text-xs text-gray-500">{t.precision}</p>
           </div>
           <div className="bg-navy-800 rounded-xl p-3 text-center">
             <p className="font-bangers text-2xl text-white">🔥{profile.stats.bestStreak}</p>
-            <p className="font-nunito text-xs text-gray-500">mejor racha</p>
+            <p className="font-nunito text-xs text-gray-500">{t.bestStreakShort}</p>
           </div>
         </div>
       </div>

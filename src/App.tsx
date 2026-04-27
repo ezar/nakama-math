@@ -19,11 +19,11 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>('intro')
 
   return (
-    <div className="bg-navy-900 min-h-screen text-white font-nunito flex flex-col">
+    <div className="h-screen overflow-hidden bg-navy-900 text-white font-nunito flex flex-col">
       <AnimatePresence mode="wait">
         <motion.div
           key={screen}
-          className="flex-1"
+          className="flex-1 min-h-0 overflow-hidden"
           variants={screenVariants}
           initial="initial"
           animate="animate"
@@ -45,6 +45,7 @@ export default function App() {
           {screen === 'game' && (
             <GameScreen
               onFinish={() => setScreen('results')}
+              onExit={() => setScreen('hub')}
             />
           )}
           {screen === 'results' && (
