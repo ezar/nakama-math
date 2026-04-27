@@ -1,8 +1,14 @@
 # Nakama Math
 
+[![Deploy to GitHub Pages](https://github.com/ezar/nakama-math/actions/workflows/deploy.yml/badge.svg)](https://github.com/ezar/nakama-math/actions/workflows/deploy.yml)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-18-61dafb?logo=react&logoColor=white)](https://react.dev/)
+[![PWA](https://img.shields.io/badge/PWA-offline--first-5a0fc8?logo=pwa&logoColor=white)](https://web.dev/progressive-web-apps/)
+[![License](https://img.shields.io/badge/license-private-lightgrey)](#license)
+
 A math practice web app for kids with a One Piece theme. Players earn Berries, unlock pirate ranks, and battle through four game modes — all without an internet connection or user account.
 
-**Live app:** `https://ezar.github.io/nakama-math/`
+**🌐 Live app: [ezar.github.io/nakama-math](https://ezar.github.io/nakama-math/)**
 
 ---
 
