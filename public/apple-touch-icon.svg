@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+  <rect width="180" height="180" rx="38" fill="#0a0e1a"/>
+  <rect x="10" y="10" width="160" height="160" rx="26" fill="#111827"/>
+  <!-- Skull -->
+  <circle cx="90" cy="75" r="40" fill="#f5c842"/>
+  <circle cx="76" cy="69" r="10" fill="#0a0e1a"/>
+  <circle cx="104" cy="69" r="10" fill="#0a0e1a"/>
+  <rect x="73" y="90" width="34" height="7" rx="3.5" fill="#0a0e1a"/>
+  <rect x="77" y="97" width="6" height="10" rx="3" fill="#0a0e1a"/>
+  <rect x="87" y="97" width="6" height="10" rx="3" fill="#0a0e1a"/>
+  <rect x="97" y="97" width="6" height="10" rx="3" fill="#0a0e1a"/>
+  <!-- Crossbones -->
+  <rect x="22" y="120" width="136" height="10" rx="5" fill="#f5c842" transform="rotate(-28 90 125)"/>
+  <rect x="22" y="120" width="136" height="10" rx="5" fill="#f5c842" transform="rotate(28 90 125)"/>
+  <!-- Plus -->
+  <rect x="81" y="34" width="18" height="6" rx="3" fill="#d42b2b"/>
+  <rect x="87" y="28" width="6" height="18" rx="3" fill="#d42b2b"/>
+</svg>
