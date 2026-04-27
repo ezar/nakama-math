@@ -92,29 +92,36 @@ export function useSoundEffect() {
   const soundEnabled = useSettingsStore(s => s.soundEnabled)
   const ctxRef = useRef<AudioContext | null>(null)
 
-  const getCtx = useCallback((): AudioContext | null => {
-    if (!soundEnabled) return null
-    if (!ctxRef.current) ctxRef.current = createAudioContext()
-    if (ctxRef.current.state === 'suspended') ctxRef.current.resume()
-    return ctxRef.current
-  }, [soundEnabled])
-
   const play = useCallback((type: SoundType) => {
-    const ctx = getCtx()
-    if (!ctx) return
-    try {
-      switch (type) {
-        case 'correct':  playCorrect(ctx);  break
-        case 'wrong':    playWrong(ctx);    break
-        case 'streak':   playStreak(ctx);   break
-        case 'rankUp':   playRankUp(ctx);   break
-        case 'timeout':  playTimeout(ctx);  break
-        case 'tick':     playTick(ctx);     break
-      }
-    } catch {
-      // AudioContext can fail silently in some environments
+    if (!soundEnabled) return
+
+    if (!ctxRef.current) {
+      ctxRef.current = createAudioContext()
     }
-  }, [getCtx])
+
+    const ctx = ctxRef.current
+
+    const dispatch = () => {
+      try {
+        switch (type) {
+          case 'correct': playCorrect(ctx); break
+          case 'wrong':   playWrong(ctx);   break
+          case 'streak':  playStreak(ctx);  break
+          case 'rankUp':  playRankUp(ctx);  break
+          case 'timeout': playTimeout(ctx); break
+          case 'tick':    playTick(ctx);    break
+        }
+      } catch {
+        // AudioContext can fail silently in some environments
+      }
+    }
+
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(dispatch).catch(() => {})
+    } else {
+      dispatch()
+    }
+  }, [soundEnabled])
 
   return { play }
 }
