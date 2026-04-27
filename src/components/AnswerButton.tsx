@@ -10,12 +10,14 @@ interface AnswerButtonProps {
 }
 
 const stateClasses: Record<AnswerState, string> = {
-  idle: 'bg-navy-700 border-navy-600 hover:bg-navy-600 hover:border-gold-400 text-white',
+  idle: 'bg-navy-700 border-navy-600 text-white',
   correct: 'bg-emerald-600 border-emerald-400 text-white',
   wrong: 'bg-pirate-red border-pirate-red-dark text-white',
 }
 
 export function AnswerButton({ label, state, disabled, onClick }: AnswerButtonProps) {
+  const hoverClasses = !disabled && state === 'idle' ? 'hover:bg-navy-600 hover:border-gold-400' : ''
+
   return (
     <motion.button
       whileHover={!disabled && state === 'idle' ? { scale: 1.03 } : {}}
@@ -25,7 +27,7 @@ export function AnswerButton({ label, state, disabled, onClick }: AnswerButtonPr
       onClick={onClick}
       disabled={disabled}
       aria-label={`Respuesta: ${label}`}
-      className={`w-full py-4 px-6 rounded-2xl border-2 font-nunito font-bold text-xl transition-colors duration-150 ${stateClasses[state]} ${disabled && state === 'idle' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+      className={`w-full py-4 px-6 rounded-2xl border-2 font-nunito font-bold text-xl transition-colors duration-150 ${stateClasses[state]} ${hoverClasses} ${disabled && state === 'idle' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
     >
       {label}
     </motion.button>
