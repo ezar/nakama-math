@@ -5,6 +5,7 @@ import { HubScreen } from './screens/HubScreen'
 import { GameScreen } from './screens/GameScreen'
 import { ResultsScreen } from './screens/ResultsScreen'
 import { RankingScreen } from './screens/RankingScreen'
+import { Footer } from './components/Footer'
 
 type Screen = 'intro' | 'hub' | 'game' | 'results' | 'ranking'
 
@@ -18,10 +19,11 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>('intro')
 
   return (
-    <div className="bg-navy-900 min-h-screen text-white font-nunito">
+    <div className="bg-navy-900 min-h-screen text-white font-nunito flex flex-col">
       <AnimatePresence mode="wait">
         <motion.div
           key={screen}
+          className="flex-1"
           variants={screenVariants}
           initial="initial"
           animate="animate"
@@ -58,6 +60,7 @@ export default function App() {
           )}
         </motion.div>
       </AnimatePresence>
+      <Footer />
     </div>
   )
 }
