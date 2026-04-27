@@ -80,28 +80,46 @@ export function IntroScreen({ onStart, onRanking }: IntroScreenProps) {
 
       {/* Profiles grid */}
       <div className="w-full max-w-md flex flex-col gap-4 my-6">
-        <div className="grid grid-cols-3 gap-3">
-          {profiles.map(p => (
-            <ProfileCard
-              key={p.id}
-              profile={p}
-              selected={p.id === currentProfileId}
-              onSelect={() => handleSelect(p.id)}
-              onDelete={() => setConfirmDelete(p.id)}
-            />
-          ))}
-          {profiles.length < 6 && (
+        {profiles.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center gap-3 text-center"
+          >
+            <p className="font-nunito text-gray-400 text-sm">{t.noPiratesYet}</p>
             <motion.button
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.97 }}
               onClick={() => setShowCreate(true)}
-              className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 border-dashed border-navy-600 hover:border-gold-400 text-gray-500 hover:text-gold-400 transition-colors cursor-pointer"
+              className="px-8 py-4 rounded-2xl font-bangers text-2xl tracking-widest bg-gold-400 text-navy-900 hover:bg-gold-500 transition-colors shadow-lg shadow-gold-400/30"
             >
-              <span className="text-3xl">＋</span>
-              <span className="font-nunito text-xs">{t.newPirate}</span>
+              {t.newPirate}
             </motion.button>
-          )}
-        </div>
+          </motion.div>
+        ) : (
+          <div className="grid grid-cols-3 gap-3">
+            {profiles.map(p => (
+              <ProfileCard
+                key={p.id}
+                profile={p}
+                selected={p.id === currentProfileId}
+                onSelect={() => handleSelect(p.id)}
+                onDelete={() => setConfirmDelete(p.id)}
+              />
+            ))}
+            {profiles.length < 6 && (
+              <motion.button
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setShowCreate(true)}
+                className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 border-dashed border-navy-600 hover:border-gold-400 text-gray-500 hover:text-gold-400 transition-colors cursor-pointer"
+              >
+                <span className="text-3xl">＋</span>
+                <span className="font-nunito text-xs">{t.newPirate}</span>
+              </motion.button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Play button — visible once a profile is selected */}
