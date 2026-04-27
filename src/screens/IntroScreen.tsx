@@ -39,7 +39,7 @@ export function IntroScreen({ onStart, onRanking }: IntroScreenProps) {
   const locales: Locale[] = ['es', 'en', 'ca']
 
   return (
-    <div className="h-full overflow-y-auto bg-navy-900 flex flex-col items-center justify-between p-6 relative">
+    <div className="h-full overflow-hidden bg-navy-900 flex flex-col items-center justify-between p-4 relative">
       {/* Top bar: language + sound */}
       <div className="w-full flex justify-end gap-3 mb-2">
         <div className="flex gap-1">

@@ -30,7 +30,6 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
   const unlockedLevels = getUnlockedLevels(profile.berries)
   const currentLevel = unlockedLevels[unlockedLevels.length - 1]
 
-  // Progress to next rank
   const rankIdx = getRankIndex(profile.berries)
   const nextBerries = getNextRankBerries(profile.berries)
   const nextLevel = LEVELS[rankIdx + 1]
@@ -65,10 +64,11 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
   const modes: GameMode[] = ['normal', 'speed', 'survival', 'blitz']
 
   return (
-    <div className="h-full overflow-y-auto bg-navy-900 flex flex-col items-center p-6">
-      <div className="w-full max-w-md">
+    <div className="h-full overflow-hidden bg-navy-900 flex flex-col items-center px-4 py-3">
+      <div className="w-full max-w-md flex flex-col gap-3">
+
         {/* Back + profile header */}
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex items-center gap-3">
           <button
             onClick={onBack}
             aria-label="Volver"
@@ -77,9 +77,9 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
             ←
           </button>
           <div className="flex items-center gap-3 flex-1">
-            <span className="text-4xl">{profile.avatar}</span>
+            <span className="text-3xl">{profile.avatar}</span>
             <div className="flex-1">
-              <p className="font-nunito font-bold text-white">{profile.name}</p>
+              <p className="font-nunito font-bold text-white text-sm">{profile.name}</p>
               <div className="flex items-center gap-2">
                 <RankBadge berries={profile.berries} />
                 <span className="font-nunito text-xs text-gold-400">🪙 {profile.berries.toLocaleString()}</span>
@@ -89,7 +89,7 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
         </div>
 
         {/* Progress to next rank */}
-        <div className="mb-6">
+        <div>
           <div className="flex justify-between items-center mb-1">
             <span className="font-nunito text-xs text-gray-400">
               {nextBerries
@@ -98,7 +98,7 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
             </span>
             <span className="font-nunito text-xs text-gold-400">{Math.round(progressPct)}%</span>
           </div>
-          <div className="h-2 bg-navy-700 rounded-full overflow-hidden">
+          <div className="h-1.5 bg-navy-700 rounded-full overflow-hidden">
             <motion.div
               className="h-full bg-gold-400 rounded-full"
               initial={{ width: 0 }}
@@ -109,20 +109,18 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
         </div>
 
         {/* Level info */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-navy-700 rounded-2xl p-4 mb-6 border border-navy-600"
-        >
-          <p className="font-nunito text-gray-400 text-xs mb-1">{t.activeLevel}</p>
-          <p className="font-bangers text-2xl text-gold-400">{currentLevel.name}</p>
-          <p className="font-nunito text-sm text-gray-300">{currentLevel.opLabel}</p>
-          <p className="font-nunito text-xs text-gold-400 mt-1">{t.berriesPerCorrect(currentLevel.berriesPerCorrect)}</p>
-        </motion.div>
+        <div className="bg-navy-700 rounded-2xl px-4 py-3 border border-navy-600 flex items-center justify-between">
+          <div>
+            <p className="font-nunito text-gray-400 text-xs">{t.activeLevel}</p>
+            <p className="font-bangers text-xl text-gold-400 leading-tight">{currentLevel.name}</p>
+            <p className="font-nunito text-xs text-gray-300">{currentLevel.opLabel}</p>
+          </div>
+          <p className="font-nunito text-xs text-gold-400">{t.berriesPerCorrect(currentLevel.berriesPerCorrect)}</p>
+        </div>
 
         {/* Mode buttons */}
-        <h2 className="font-bangers text-2xl text-white tracking-widest mb-4 text-center">{t.battleMode}</h2>
-        <div className="grid grid-cols-2 gap-3">
+        <h2 className="font-bangers text-xl text-white tracking-widest text-center">{t.battleMode}</h2>
+        <div className="grid grid-cols-2 gap-2">
           {modes.map((mode, i) => {
             const mc = MODE_CONFIGS[mode]
             const modeT = t.modes[mode]
@@ -135,35 +133,36 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => handleMode(mode)}
-                className="flex flex-col items-center gap-2 p-4 bg-navy-700 hover:bg-navy-600 rounded-2xl border-2 border-navy-600 hover:border-gold-400 transition-colors cursor-pointer"
+                className="flex flex-col items-center gap-1 py-3 px-2 bg-navy-700 hover:bg-navy-600 rounded-2xl border-2 border-navy-600 hover:border-gold-400 transition-colors cursor-pointer"
               >
-                <span className="text-3xl">{mc.icon}</span>
-                <p className="font-bangers text-lg text-white">{modeT.name}</p>
-                <p className="font-nunito text-xs text-gray-400 text-center">{modeT.desc}</p>
+                <span className="text-2xl">{mc.icon}</span>
+                <p className="font-bangers text-base text-white">{modeT.name}</p>
+                <p className="font-nunito text-xs text-gray-400 text-center leading-tight">{modeT.desc}</p>
               </motion.button>
             )
           })}
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-3 mt-6">
-          <div className="bg-navy-800 rounded-xl p-3 text-center">
-            <p className="font-bangers text-2xl text-white">{profile.stats.gamesPlayed}</p>
+        <div className="grid grid-cols-3 gap-2">
+          <div className="bg-navy-800 rounded-xl p-2 text-center">
+            <p className="font-bangers text-xl text-white">{profile.stats.gamesPlayed}</p>
             <p className="font-nunito text-xs text-gray-500">{t.gamesPlayed}</p>
           </div>
-          <div className="bg-navy-800 rounded-xl p-3 text-center">
-            <p className="font-bangers text-2xl text-white">
+          <div className="bg-navy-800 rounded-xl p-2 text-center">
+            <p className="font-bangers text-xl text-white">
               {profile.stats.totalAttempted > 0
                 ? Math.round((profile.stats.totalCorrect / profile.stats.totalAttempted) * 100)
                 : 0}%
             </p>
             <p className="font-nunito text-xs text-gray-500">{t.precision}</p>
           </div>
-          <div className="bg-navy-800 rounded-xl p-3 text-center">
-            <p className="font-bangers text-2xl text-white">🔥{profile.stats.bestStreak}</p>
+          <div className="bg-navy-800 rounded-xl p-2 text-center">
+            <p className="font-bangers text-xl text-white">🔥{profile.stats.bestStreak}</p>
             <p className="font-nunito text-xs text-gray-500">{t.bestStreakShort}</p>
           </div>
         </div>
+
       </div>
     </div>
   )

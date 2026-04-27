@@ -20,10 +20,8 @@ export function RankingScreen({ onBack }: RankingScreenProps) {
     return [...profiles].sort((a, b) => {
       if (tab === 'berries') return b.berries - a.berries
       if (tab === 'correct') {
-        const rA = a.stats.totalAttempted >= 10
-          ? a.stats.totalCorrect / a.stats.totalAttempted : -1
-        const rB = b.stats.totalAttempted >= 10
-          ? b.stats.totalCorrect / b.stats.totalAttempted : -1
+        const rA = a.stats.totalAttempted >= 10 ? a.stats.totalCorrect / a.stats.totalAttempted : -1
+        const rB = b.stats.totalAttempted >= 10 ? b.stats.totalCorrect / b.stats.totalAttempted : -1
         return rB - rA
       }
       return b.stats.bestStreak - a.stats.bestStreak
@@ -47,9 +45,11 @@ export function RankingScreen({ onBack }: RankingScreenProps) {
   }
 
   return (
-    <div className="h-full overflow-y-auto bg-navy-900 flex flex-col items-center p-6">
-      <div className="w-full max-w-md">
-        <div className="flex items-center gap-4 mb-6">
+    <div className="h-full overflow-hidden bg-navy-900 flex flex-col items-center p-4">
+      <div className="w-full max-w-md flex flex-col h-full min-h-0">
+
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-3">
           <button
             onClick={onBack}
             className="text-gray-400 hover:text-white font-nunito text-xl transition-colors"
@@ -60,7 +60,7 @@ export function RankingScreen({ onBack }: RankingScreenProps) {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-3">
           {tabs.map(tb => (
             <button
               key={tb.key}
@@ -74,32 +74,35 @@ export function RankingScreen({ onBack }: RankingScreenProps) {
           ))}
         </div>
 
-        {/* List */}
-        {sorted.length === 0 ? (
-          <p className="text-center font-nunito text-gray-500 mt-10">{t.noPiratesYet}</p>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {sorted.map((p, i) => (
-              <motion.div
-                key={p.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="flex items-center gap-4 bg-navy-700 rounded-2xl p-4 border border-navy-600"
-              >
-                <span className={`font-bangers text-2xl w-8 text-center ${i === 0 ? 'text-gold-400' : i === 1 ? 'text-gray-300' : i === 2 ? 'text-amber-600' : 'text-gray-500'}`}>
-                  {i + 1}
-                </span>
-                <span className="text-3xl">{p.avatar}</span>
-                <div className="flex-1">
-                  <p className="font-nunito font-bold text-white">{p.name}</p>
-                  <RankBadge berries={p.berries} />
-                </div>
-                <p className="font-bangers text-xl text-gold-400">{getValue(p)}</p>
-              </motion.div>
-            ))}
-          </div>
-        )}
+        {/* List — scrollable only within this region */}
+        <div className="flex-1 overflow-y-auto min-h-0">
+          {sorted.length === 0 ? (
+            <p className="text-center font-nunito text-gray-500 mt-10">{t.noPiratesYet}</p>
+          ) : (
+            <div className="flex flex-col gap-2 pb-2">
+              {sorted.map((p, i) => (
+                <motion.div
+                  key={p.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="flex items-center gap-3 bg-navy-700 rounded-2xl p-3 border border-navy-600"
+                >
+                  <span className={`font-bangers text-2xl w-7 text-center shrink-0 ${i === 0 ? 'text-gold-400' : i === 1 ? 'text-gray-300' : i === 2 ? 'text-amber-600' : 'text-gray-500'}`}>
+                    {i + 1}
+                  </span>
+                  <span className="text-2xl shrink-0">{p.avatar}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-nunito font-bold text-white text-sm truncate">{p.name}</p>
+                    <RankBadge berries={p.berries} />
+                  </div>
+                  <p className="font-bangers text-lg text-gold-400 shrink-0">{getValue(p)}</p>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
+
       </div>
     </div>
   )

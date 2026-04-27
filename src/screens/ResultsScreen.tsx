@@ -50,8 +50,8 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
   ]
 
   return (
-    <div className="h-full overflow-y-auto bg-navy-900 flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-md flex flex-col items-center gap-6">
+    <div className="h-full overflow-hidden bg-navy-900 flex flex-col items-center justify-center p-4 gap-4">
+      <div className="w-full max-w-md flex flex-col items-center gap-4">
 
         <motion.h1
           initial={{ scale: 0, opacity: 0 }}
