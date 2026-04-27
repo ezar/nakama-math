@@ -90,13 +90,8 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
       return
     }
 
+    // Let the currentIndex useEffect handle question/state reset for both modes
     if (isSurvival) {
-      const level = getLevelById(config.levelId)
-      if (level) setCurrentQuestion(generateQuestion(level))
-      setAnswerStates({})
-      setFeedback(null)
-      setLocked(false)
-      if (config.timePerQuestion) setTimeLeft(config.timePerQuestion)
       useGameStore.setState(s => ({ currentIndex: s.currentIndex + 1 }))
     } else {
       nextQuestion()
@@ -120,12 +115,14 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
 
     if (isCorrect) {
       play(streak >= 4 ? 'streak' : 'correct')
+      navigator.vibrate?.(40)
       const msgs = streak >= 5 ? t.gearMessages : t.correctMessages
       setFeedback(msgs[Math.floor(Math.random() * msgs.length)])
       answerQuestion(true, currentQuestion.pointValue)
       setTimeout(() => advance(true), 900)
     } else {
       play('wrong')
+      navigator.vibrate?.([60, 40, 60])
       setFeedback(t.wrongMessages[Math.floor(Math.random() * t.wrongMessages.length)])
       answerQuestion(false, 0)
 
@@ -188,7 +185,7 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
               )}
             </div>
           )}
-          <StreakBadge streak={streak} />
+          <StreakBadge streak={streak} baseMultiplier={config?.multiplier ?? 1} />
         </div>
 
         {/* Gear Second banner */}

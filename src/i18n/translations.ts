@@ -37,6 +37,8 @@ export interface Translations {
   rankUp: string
   playAgain: string
   backToCrew: string
+  shareResult: string
+  shareText: (name: string, berries: number, accuracy: number) => string
 
   rankingTitle: string
   berriesTab: string
@@ -96,6 +98,8 @@ export const translations: Record<Locale, Translations> = {
     rankUp: '🎉 ¡ASCENSO DE RANGO!',
     playAgain: '⚔️ Otra vez',
     backToCrew: '🏴‍☠️ Tripulación',
+    shareResult: '📤 Compartir',
+    shareText: (name, berries, accuracy) => `🏴‍☠️ ${name} ganó ${berries} 🪙 con ${accuracy}% de precisión en Nakama Math!`,
     rankingTitle: '🏆 RANKING',
     berriesTab: '🪙 Berries',
     correctTab: '✅ Aciertos',
@@ -150,6 +154,8 @@ export const translations: Record<Locale, Translations> = {
     rankUp: '🎉 RANK UP!',
     playAgain: '⚔️ Again',
     backToCrew: '🏴‍☠️ Crew',
+    shareResult: '📤 Share',
+    shareText: (name, berries, accuracy) => `🏴‍☠️ ${name} earned ${berries} 🪙 with ${accuracy}% accuracy in Nakama Math!`,
     rankingTitle: '🏆 RANKING',
     berriesTab: '🪙 Berries',
     correctTab: '✅ Correct',
@@ -204,6 +210,8 @@ export const translations: Record<Locale, Translations> = {
     rankUp: '🎉 ASCENS DE RANG!',
     playAgain: '⚔️ Una altra',
     backToCrew: '🏴‍☠️ Tripulació',
+    shareResult: '📤 Compartir',
+    shareText: (name, berries, accuracy) => `🏴‍☠️ ${name} ha guanyat ${berries} 🪙 amb ${accuracy}% de precisió a Nakama Math!`,
     rankingTitle: '🏆 RÀNQUING',
     berriesTab: '🪙 Berries',
     correctTab: '✅ Encerts',

@@ -190,6 +190,22 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
             {t.playAgain}
           </motion.button>
         </div>
+
+        {/* Share */}
+        {typeof navigator.share === 'function' && updatedProfile && (
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.75 }}
+            onClick={() => navigator.share({
+              title: 'Nakama Math',
+              text: t.shareText(updatedProfile.name, lastResult.berriesEarned, lastResult.accuracy),
+            }).catch(() => {})}
+            className="w-full py-2 rounded-xl font-nunito text-sm text-gray-400 hover:text-white transition-colors"
+          >
+            {t.shareResult}
+          </motion.button>
+        )}
       </div>
     </div>
   )
