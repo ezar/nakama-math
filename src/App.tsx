@@ -19,7 +19,7 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>('intro')
 
   return (
-    <div className="h-screen overflow-hidden bg-navy-900 text-white font-nunito flex flex-col">
+    <div className="h-dvh overflow-hidden bg-navy-900 text-white font-nunito flex flex-col safe-top safe-bottom safe-left safe-right">
       <AnimatePresence mode="wait">
         <motion.div
           key={screen}
