@@ -5,6 +5,7 @@ export interface Translations {
   newPirate: string
   pirateNamePlaceholder: string
   joinCrew: string
+  setSail: string
   cancel: string
   ranking: string
   deletePirateConfirm: (name: string) => string
@@ -67,6 +68,7 @@ export const translations: Record<Locale, Translations> = {
     newPirate: '¡Nuevo Pirata!',
     pirateNamePlaceholder: 'Tu nombre pirata...',
     joinCrew: '⚓ ¡Unirse!',
+    setSail: '⚓ ¡Zarpar!',
     cancel: 'Cancelar',
     ranking: '🏆 Ranking',
     deletePirateConfirm: (name) => `¿Eliminar a ${name}?`,
@@ -120,6 +122,7 @@ export const translations: Record<Locale, Translations> = {
     newPirate: 'New Pirate!',
     pirateNamePlaceholder: 'Your pirate name...',
     joinCrew: '⚓ Join!',
+    setSail: '⚓ Set Sail!',
     cancel: 'Cancel',
     ranking: '🏆 Ranking',
     deletePirateConfirm: (name) => `Delete ${name}?`,
@@ -173,6 +176,7 @@ export const translations: Record<Locale, Translations> = {
     newPirate: 'Nou Pirata!',
     pirateNamePlaceholder: 'El teu nom pirata...',
     joinCrew: '⚓ Unir-se!',
+    setSail: '⚓ Salpem!',
     cancel: "Cancel·lar",
     ranking: '🏆 Rànquing',
     deletePirateConfirm: (name) => `Eliminar ${name}?`,
