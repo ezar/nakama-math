@@ -32,8 +32,11 @@ export function IntroScreen({ onStart, onRanking }: IntroScreenProps) {
   }
 
   function handleSelect(id: string) {
-    selectProfile(id)
-    onStart()
+    if (id === currentProfileId) {
+      onStart()
+    } else {
+      selectProfile(id)
+    }
   }
 
   const locales: Locale[] = ['es', 'en', 'ca']
@@ -101,13 +104,32 @@ export function IntroScreen({ onStart, onRanking }: IntroScreenProps) {
         </div>
       </div>
 
-      {/* Ranking button */}
-      <button
-        onClick={onRanking}
-        className="font-nunito font-bold text-gray-400 hover:text-gold-400 transition-colors text-sm mb-4"
-      >
-        {t.ranking}
-      </button>
+      {/* Play button — visible once a profile is selected */}
+      <div className="w-full max-w-md flex flex-col items-center gap-3 mb-4">
+        <AnimatePresence>
+          {currentProfileId && (
+            <motion.button
+              key="play-btn"
+              initial={{ opacity: 0, scale: 0.8, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 10 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={onStart}
+              className="w-full py-4 rounded-2xl font-bangers text-2xl tracking-widest bg-gold-400 text-navy-900 hover:bg-gold-500 transition-colors shadow-lg shadow-gold-400/30"
+            >
+              {t.setSail}
+            </motion.button>
+          )}
+        </AnimatePresence>
+        <button
+          onClick={onRanking}
+          className="font-nunito font-bold text-gray-400 hover:text-gold-400 transition-colors text-sm"
+        >
+          {t.ranking}
+        </button>
+      </div>
 
       {/* Create profile modal */}
       <AnimatePresence>

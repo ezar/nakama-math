@@ -1,4 +1,5 @@
-import { motion } from 'framer-motion'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useProfileStore } from '../store/profileStore'
 import { useGameStore } from '../store/gameStore'
 import { useTranslation } from '../i18n/useTranslation'
@@ -6,7 +7,7 @@ import { RankBadge } from '../components/RankBadge'
 import { getUnlockedLevels, getLevelById, LEVELS } from '../config/levels'
 import { generateQuestion } from '../engine/QuestionEngine'
 import { getRankIndex, getNextRankBerries } from '../utils/rankSystem'
-import type { GameMode, GameConfig } from '../engine/types'
+import type { GameMode, GameConfig, LevelConfig } from '../engine/types'
 
 const MODE_CONFIGS: Record<GameMode, { icon: string; questions: number; timePerQuestion?: number; livesCount?: number; multiplier: number }> = {
   normal:   { icon: '⚔️',  questions: 10, multiplier: 1 },
@@ -28,7 +29,10 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
   if (!profile) return null
 
   const unlockedLevels = getUnlockedLevels(profile.berries)
-  const currentLevel = unlockedLevels[unlockedLevels.length - 1]
+  const [selectedLevel, setSelectedLevel] = useState<LevelConfig>(
+    unlockedLevels[unlockedLevels.length - 1]
+  )
+  const [showLevelPicker, setShowLevelPicker] = useState(false)
 
   const rankIdx = getRankIndex(profile.berries)
   const nextBerries = getNextRankBerries(profile.berries)
@@ -40,7 +44,7 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
 
   function handleMode(mode: GameMode) {
     if (!profile) return
-    const levelConfig = getLevelById(currentLevel.id)
+    const levelConfig = getLevelById(selectedLevel.id)
     if (!levelConfig) return
 
     const mc = MODE_CONFIGS[mode]
@@ -62,6 +66,7 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
   }
 
   const modes: GameMode[] = ['normal', 'speed', 'survival', 'blitz']
+  const isMaxLevel = unlockedLevels.length === 1
 
   return (
     <div className="h-full overflow-hidden bg-navy-900 flex flex-col items-center px-4 py-3">
@@ -69,13 +74,7 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
 
         {/* Back + profile header */}
         <div className="flex items-center gap-3">
-          <button
-            onClick={onBack}
-            aria-label="Volver"
-            className="text-gray-400 hover:text-white font-nunito text-xl transition-colors"
-          >
-            ←
-          </button>
+          <button onClick={onBack} aria-label="Volver" className="text-gray-400 hover:text-white font-nunito text-xl transition-colors">←</button>
           <div className="flex items-center gap-3 flex-1">
             <span className="text-3xl">{profile.avatar}</span>
             <div className="flex-1">
@@ -92,9 +91,7 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
         <div>
           <div className="flex justify-between items-center mb-1">
             <span className="font-nunito text-xs text-gray-400">
-              {nextBerries
-                ? t.nextRank(nextLevel?.name ?? '', nextBerries - profile.berries)
-                : t.maxRankReached}
+              {nextBerries ? t.nextRank(nextLevel?.name ?? '', nextBerries - profile.berries) : t.maxRankReached}
             </span>
             <span className="font-nunito text-xs text-gold-400">{Math.round(progressPct)}%</span>
           </div>
@@ -108,15 +105,21 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
           </div>
         </div>
 
-        {/* Level info */}
-        <div className="bg-navy-700 rounded-2xl px-4 py-3 border border-navy-600 flex items-center justify-between">
+        {/* Level selector */}
+        <button
+          onClick={() => !isMaxLevel && setShowLevelPicker(true)}
+          className={`bg-navy-700 rounded-2xl px-4 py-3 border border-navy-600 flex items-center justify-between w-full text-left ${!isMaxLevel ? 'hover:border-gold-400 transition-colors cursor-pointer' : 'cursor-default'}`}
+        >
           <div>
             <p className="font-nunito text-gray-400 text-xs">{t.activeLevel}</p>
-            <p className="font-bangers text-xl text-gold-400 leading-tight">{currentLevel.name}</p>
-            <p className="font-nunito text-xs text-gray-300">{currentLevel.opLabel}</p>
+            <p className="font-bangers text-xl text-gold-400 leading-tight">{selectedLevel.name}</p>
+            <p className="font-nunito text-xs text-gray-300">{selectedLevel.opLabel}</p>
           </div>
-          <p className="font-nunito text-xs text-gold-400">{t.berriesPerCorrect(currentLevel.berriesPerCorrect)}</p>
-        </div>
+          <div className="flex items-center gap-2">
+            <p className="font-nunito text-xs text-gold-400">{t.berriesPerCorrect(selectedLevel.berriesPerCorrect)}</p>
+            {!isMaxLevel && <span className="text-gray-500 text-sm">›</span>}
+          </div>
+        </button>
 
         {/* Mode buttons */}
         <h2 className="font-bangers text-xl text-white tracking-widest text-center">{t.battleMode}</h2>
@@ -145,25 +148,61 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-2">
-          <div className="bg-navy-800 rounded-xl p-2 text-center">
-            <p className="font-bangers text-xl text-white">{profile.stats.gamesPlayed}</p>
-            <p className="font-nunito text-xs text-gray-500">{t.gamesPlayed}</p>
-          </div>
-          <div className="bg-navy-800 rounded-xl p-2 text-center">
-            <p className="font-bangers text-xl text-white">
-              {profile.stats.totalAttempted > 0
-                ? Math.round((profile.stats.totalCorrect / profile.stats.totalAttempted) * 100)
-                : 0}%
-            </p>
-            <p className="font-nunito text-xs text-gray-500">{t.precision}</p>
-          </div>
-          <div className="bg-navy-800 rounded-xl p-2 text-center">
-            <p className="font-bangers text-xl text-white">🔥{profile.stats.bestStreak}</p>
-            <p className="font-nunito text-xs text-gray-500">{t.bestStreakShort}</p>
-          </div>
+          {[
+            { value: profile.stats.gamesPlayed, label: t.gamesPlayed },
+            { value: `${profile.stats.totalAttempted > 0 ? Math.round((profile.stats.totalCorrect / profile.stats.totalAttempted) * 100) : 0}%`, label: t.precision },
+            { value: `🔥${profile.stats.bestStreak}`, label: t.bestStreakShort },
+          ].map(s => (
+            <div key={s.label} className="bg-navy-800 rounded-xl p-2 text-center">
+              <p className="font-bangers text-xl text-white">{s.value}</p>
+              <p className="font-nunito text-xs text-gray-500">{s.label}</p>
+            </div>
+          ))}
         </div>
-
       </div>
+
+      {/* Level picker modal */}
+      <AnimatePresence>
+        {showLevelPicker && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 flex items-end justify-center z-50 p-4"
+            onClick={() => setShowLevelPicker(false)}
+          >
+            <motion.div
+              initial={{ y: 60, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 60, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-navy-800 rounded-3xl p-4 w-full max-w-sm border border-navy-600 shadow-2xl"
+            >
+              <p className="font-bangers text-xl text-gold-400 mb-3 text-center tracking-widest">{t.activeLevel}</p>
+              <div className="flex flex-col gap-2">
+                {unlockedLevels.map(level => (
+                  <button
+                    key={level.id}
+                    onClick={() => { setSelectedLevel(level); setShowLevelPicker(false) }}
+                    className={`flex items-center justify-between px-4 py-3 rounded-2xl border-2 transition-colors ${
+                      selectedLevel.id === level.id
+                        ? 'border-gold-400 bg-gold-400/10'
+                        : 'border-navy-600 hover:border-navy-500'
+                    }`}
+                  >
+                    <div className="text-left">
+                      <p className="font-bangers text-lg text-white">{level.name}</p>
+                      <p className="font-nunito text-xs text-gray-400">{level.opLabel}</p>
+                    </div>
+                    <span className="font-nunito text-xs text-gold-400">+{level.berriesPerCorrect} 🪙</span>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
