@@ -36,7 +36,8 @@ export default function App() {
   }, [])
 
   return (
-    <div className="h-dvh overflow-hidden bg-navy-900 text-white font-nunito flex flex-col safe-top safe-left safe-right">
+    <div className="h-dvh md:flex md:items-center md:justify-center">
+    <div className="h-dvh w-full md:w-[430px] md:rounded-3xl md:shadow-[0_0_80px_rgba(0,0,0,0.7)] md:ring-1 md:ring-white/10 overflow-hidden bg-navy-900 text-white font-nunito flex flex-col safe-top safe-left safe-right">
       {!splashDone && <SplashScreen onDone={() => setSplashDone(true)} />}
       <OfflineBanner />
       {needsUpdate && <UpdateBanner onUpdate={() => reloadRef.current?.()} />}
@@ -82,6 +83,7 @@ export default function App() {
         </motion.div>
       </AnimatePresence>
       <Footer />
+    </div>
     </div>
   )
 }

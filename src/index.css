@@ -32,3 +32,12 @@
   /* h-screen that respects the dynamic viewport on mobile */
   .h-dvh { height: 100dvh; }
 }
+
+/* Desktop surround: subtle dot grid over a darker base */
+@media (min-width: 768px) {
+  body {
+    background-color: #04080f;
+    background-image: radial-gradient(#111827 1.5px, transparent 1.5px);
+    background-size: 24px 24px;
+  }
+}
