@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { IntroScreen } from './screens/IntroScreen'
 import { HubScreen } from './screens/HubScreen'
@@ -8,6 +8,7 @@ import { RankingScreen } from './screens/RankingScreen'
 import { SplashScreen } from './screens/SplashScreen'
 import { Footer } from './components/Footer'
 import { OfflineBanner } from './components/OfflineBanner'
+import { UpdateBanner } from './components/UpdateBanner'
 
 type Screen = 'intro' | 'hub' | 'game' | 'results' | 'ranking'
 
@@ -20,11 +21,25 @@ const screenVariants = {
 export default function App() {
   const [screen, setScreen] = useState<Screen>('intro')
   const [splashDone, setSplashDone] = useState(false)
+  const [needsUpdate, setNeedsUpdate] = useState(false)
+  const reloadRef = useRef<(() => void) | null>(null)
+
+  useEffect(() => {
+    import('virtual:pwa-register').then(({ registerSW }) => {
+      const update = registerSW({
+        onNeedRefresh() { setNeedsUpdate(true) },
+        onOfflineReady() {},
+        immediate: false,
+      })
+      reloadRef.current = () => update(true)
+    })
+  }, [])
 
   return (
     <div className="h-dvh overflow-hidden bg-navy-900 text-white font-nunito flex flex-col safe-top safe-left safe-right">
       {!splashDone && <SplashScreen onDone={() => setSplashDone(true)} />}
       <OfflineBanner />
+      {needsUpdate && <UpdateBanner onUpdate={() => reloadRef.current?.()} />}
       <AnimatePresence mode="wait">
         <motion.div
           key={screen}

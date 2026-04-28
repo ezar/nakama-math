@@ -3,11 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useProfileStore } from '../store/profileStore'
 import { useGameStore } from '../store/gameStore'
 import { useTranslation } from '../i18n/useTranslation'
+import { useSettingsStore } from '../store/settingsStore'
 import { RankBadge } from '../components/RankBadge'
+import { AchievementGallery } from '../components/AchievementGallery'
 import { getUnlockedLevels, getLevelById, LEVELS } from '../config/levels'
 import { generateQuestion } from '../engine/QuestionEngine'
 import { getRankIndex, getNextRankBerries } from '../utils/rankSystem'
 import type { GameMode, GameConfig, LevelConfig } from '../engine/types'
+import type { Locale } from '../i18n/translations'
 
 const MODE_CONFIGS: Record<GameMode, { icon: string; questions: number; timePerQuestion?: number; livesCount?: number; multiplier: number }> = {
   normal:   { icon: '⚔️',  questions: 10, multiplier: 1 },
@@ -23,6 +26,7 @@ interface HubScreenProps {
 
 export function HubScreen({ onPlay, onBack }: HubScreenProps) {
   const t = useTranslation()
+  const locale = useSettingsStore(s => s.locale) as Locale
   const profile = useProfileStore(s => s.profiles.find(p => p.id === s.currentProfileId) ?? null)
   const { startGame } = useGameStore()
 
@@ -33,6 +37,7 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
     unlockedLevels[unlockedLevels.length - 1]
   )
   const [showLevelPicker, setShowLevelPicker] = useState(false)
+  const [showAchievements, setShowAchievements] = useState(false)
 
   const rankIdx = getRankIndex(profile.berries)
   const nextBerries = getNextRankBerries(profile.berries)
@@ -85,6 +90,18 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
               </div>
             </div>
           </div>
+          <button
+            onClick={() => setShowAchievements(true)}
+            aria-label="Logros"
+            className="relative text-gray-500 hover:text-gold-400 transition-colors text-xl"
+          >
+            🏆
+            {(profile.achievements ?? []).length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-purple-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                {(profile.achievements ?? []).length}
+              </span>
+            )}
+          </button>
         </div>
 
         {/* Progress to next rank */}
@@ -161,18 +178,20 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
         </div>
 
         {/* Recent games */}
-        {(profile.recentGames ?? []).length > 0 && (
-          <div className="flex flex-col gap-1">
-            <p className="font-nunito text-xs text-gray-500">{t.recentGames}</p>
-            {(profile.recentGames ?? []).slice(0, 5).map((g, i) => (
+        <div className="flex flex-col gap-1">
+          <p className="font-nunito text-xs text-gray-500">{t.recentGames}</p>
+          {(profile.recentGames ?? []).length === 0 ? (
+            <p className="font-nunito text-xs text-gray-600 text-center py-1">⚔️ {t.playFirstGame}</p>
+          ) : (
+            (profile.recentGames ?? []).slice(0, 5).map((g, i) => (
               <div key={i} className="flex items-center justify-between bg-navy-800 rounded-xl px-3 py-1.5">
                 <span className="font-nunito text-xs text-gray-400">{t.modes[g.mode].name}</span>
                 <span className="font-nunito text-xs text-gold-400">+{g.berriesEarned} 🪙</span>
                 <span className="font-nunito text-xs text-gray-500">{g.accuracy}%</span>
               </div>
-            ))}
-          </div>
-        )}
+            ))
+          )}
+        </div>
       </div>
 
       {/* Level picker modal */}
@@ -217,6 +236,14 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {showAchievements && (
+        <AchievementGallery
+          unlockedIds={profile.achievements ?? []}
+          locale={locale}
+          onClose={() => setShowAchievements(false)}
+        />
+      )}
     </div>
   )
 }

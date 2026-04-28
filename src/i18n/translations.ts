@@ -61,6 +61,7 @@ export interface Translations {
   precision: string
   bestStreakShort: string
   recentGames: string
+  playFirstGame: string
   nextRank: (name: string, berries: number) => string
   maxRankReached: string
 
@@ -122,6 +123,7 @@ export const translations: Record<Locale, Translations> = {
     precision: 'precisión',
     bestStreakShort: 'mejor racha',
     recentGames: 'Últimas partidas',
+    playFirstGame: '¡Juega tu primera partida!',
     nextRank: (name, berries) => `Faltan ${berries.toLocaleString()} 🪙 para ${name}`,
     maxRankReached: '¡Rango máximo alcanzado! 👑',
     ranks: ['Grumete', 'Marinero', 'Pirata', 'Primer Oficial', 'Capitán', 'Shichibukai', 'Yonko', 'Rey Pirata'],
@@ -181,6 +183,7 @@ export const translations: Record<Locale, Translations> = {
     precision: 'accuracy',
     bestStreakShort: 'best streak',
     recentGames: 'Recent games',
+    playFirstGame: 'Play your first game!',
     nextRank: (name, berries) => `${berries.toLocaleString()} 🪙 to reach ${name}`,
     maxRankReached: 'Max rank reached! 👑',
     ranks: ['Cabin Boy', 'Sailor', 'Pirate', 'First Mate', 'Captain', 'Warlord', 'Emperor', 'Pirate King'],
@@ -240,6 +243,7 @@ export const translations: Record<Locale, Translations> = {
     precision: 'precisió',
     bestStreakShort: 'millor ratxa',
     recentGames: 'Darreres partides',
+    playFirstGame: 'Juga la teva primera partida!',
     nextRank: (name, berries) => `Falten ${berries.toLocaleString()} 🪙 per a ${name}`,
     maxRankReached: 'Rang màxim assolit! 👑',
     ranks: ['Grumete', 'Mariner', 'Pirata', 'Primer Oficial', 'Capità', 'Shichibukai', 'Yonko', 'Rei Pirata'],

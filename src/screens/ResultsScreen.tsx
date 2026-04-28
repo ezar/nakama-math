@@ -170,10 +170,10 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
   ]
 
   return (
-    <div className="h-full overflow-hidden bg-navy-900 flex flex-col items-center justify-center p-4 pb-10 gap-4">
+    <div className="h-full overflow-y-auto bg-navy-900 flex flex-col items-center justify-center p-4 pb-10 gap-4">
       {(won || showRankUp) && <Confetti />}
 
-      <div className="w-full max-w-md flex flex-col items-center gap-4">
+      <div className="w-full max-w-md flex flex-col items-center gap-3">
 
         <motion.h1
           initial={{ scale: 0, opacity: 0 }}
@@ -220,25 +220,29 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
           )}
         </AnimatePresence>
 
-        {/* New achievements */}
-        <AnimatePresence>
-          {newAchievements.map((a, i) => (
-            <motion.div
-              key={a.name}
-              initial={{ scale: 0.5, opacity: 0, x: 40 }}
-              animate={{ scale: 1, opacity: 1, x: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 300, delay: 0.6 + i * 0.15 }}
-              className="w-full py-2 px-4 rounded-2xl bg-purple-500/20 border-2 border-purple-400 flex items-center gap-3"
-            >
-              <span className="text-2xl">{a.icon}</span>
-              <div>
-                <p className="font-nunito text-xs text-purple-400">{t.achievementUnlocked}</p>
-                <p className="font-bangers text-lg text-white leading-tight">{a.name}</p>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+        {/* New achievements — shown as a compact stack */}
+        {newAchievements.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="w-full flex flex-col gap-1.5"
+          >
+            <p className="font-nunito text-xs text-purple-400 text-center">{t.achievementUnlocked}</p>
+            {newAchievements.map((a, i) => (
+              <motion.div
+                key={a.name}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 300, delay: 0.65 + i * 0.1 }}
+                className="flex items-center gap-3 px-3 py-2 rounded-xl bg-purple-500/20 border border-purple-400/50"
+              >
+                <span className="text-xl">{a.icon}</span>
+                <p className="font-nunito text-sm font-bold text-white">{a.name}</p>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
 
         {/* Profile + rank */}
         {updatedProfile && (
