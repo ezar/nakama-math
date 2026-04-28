@@ -40,6 +40,19 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
   const isSurvival = config?.mode === 'survival'
   const hasTimer = !!config?.timePerQuestion
 
+  // Keyboard shortcuts: 1/2/3/4 map to answer buttons
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const idx = ['1', '2', '3', '4'].indexOf(e.key)
+      if (idx === -1 || !currentQuestion || locked) return
+      const answer = currentQuestion.allAnswers[idx]
+      if (answer !== undefined) handleAnswer(answer)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentQuestion, locked])
+
   useEffect(() => {
     if (!config) return
     if (isSurvival) {
@@ -126,19 +139,20 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
       setFeedback(t.wrongMessages[Math.floor(Math.random() * t.wrongMessages.length)])
       answerQuestion(false, 0)
 
+      const delay = config.mode === 'blitz' ? 600 : 900
       if (config.mode === 'speed' || config.mode === 'blitz') {
         loseLife()
-        setTimeout(() => { finishGame(); onFinish() }, 1200)
+        setTimeout(() => { finishGame(); onFinish() }, delay)
       } else if (config.mode === 'survival') {
         loseLife()
         const newLives = useGameStore.getState().lives
         if (newLives <= 0) {
-          setTimeout(() => { finishGame(); onFinish() }, 1200)
+          setTimeout(() => { finishGame(); onFinish() }, 900)
         } else {
-          setTimeout(() => advance(true), 1200)
+          setTimeout(() => advance(true), 900)
         }
       } else {
-        setTimeout(() => advance(true), 1000)
+        setTimeout(() => advance(true), 900)
       }
     }
   }

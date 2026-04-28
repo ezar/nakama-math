@@ -150,7 +150,10 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
         }
       }
     }
-    if (unlocked.length > 0) setNewAchievements(unlocked)
+    if (unlocked.length > 0) {
+      setNewAchievements(unlocked)
+      setTimeout(() => play('achievement'), 600)
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

@@ -7,6 +7,7 @@ import { ResultsScreen } from './screens/ResultsScreen'
 import { RankingScreen } from './screens/RankingScreen'
 import { SplashScreen } from './screens/SplashScreen'
 import { Footer } from './components/Footer'
+import { OfflineBanner } from './components/OfflineBanner'
 
 type Screen = 'intro' | 'hub' | 'game' | 'results' | 'ranking'
 
@@ -23,6 +24,7 @@ export default function App() {
   return (
     <div className="h-dvh overflow-hidden bg-navy-900 text-white font-nunito flex flex-col safe-top safe-left safe-right">
       {!splashDone && <SplashScreen onDone={() => setSplashDone(true)} />}
+      <OfflineBanner />
       <AnimatePresence mode="wait">
         <motion.div
           key={screen}

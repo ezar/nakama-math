@@ -1,7 +1,7 @@
 import { useSettingsStore } from '../store/settingsStore'
 import { useCallback, useRef } from 'react'
 
-export type SoundType = 'correct' | 'wrong' | 'streak' | 'rankUp' | 'timeout' | 'tick'
+export type SoundType = 'correct' | 'wrong' | 'streak' | 'rankUp' | 'timeout' | 'tick' | 'achievement'
 
 function createAudioContext(): AudioContext {
   return new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
@@ -76,6 +76,20 @@ function playTimeout(ctx: AudioContext) {
   osc.start(t); osc.stop(t + 0.4)
 }
 
+function playAchievement(ctx: AudioContext) {
+  const t = ctx.currentTime
+  ;[523, 784, 1047, 1319].forEach((freq, i) => {
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.connect(gain); gain.connect(ctx.destination)
+    osc.frequency.value = freq
+    osc.type = 'triangle'
+    gain.gain.setValueAtTime(0.2, t + i * 0.07)
+    gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.07 + 0.25)
+    osc.start(t + i * 0.07); osc.stop(t + i * 0.07 + 0.25)
+  })
+}
+
 function playTick(ctx: AudioContext) {
   const t = ctx.currentTime
   const osc = ctx.createOscillator()
@@ -108,8 +122,9 @@ export function useSoundEffect() {
           case 'wrong':   playWrong(ctx);   break
           case 'streak':  playStreak(ctx);  break
           case 'rankUp':  playRankUp(ctx);  break
-          case 'timeout': playTimeout(ctx); break
-          case 'tick':    playTick(ctx);    break
+          case 'timeout':     playTimeout(ctx);     break
+          case 'tick':        playTick(ctx);        break
+          case 'achievement': playAchievement(ctx); break
         }
       } catch {
         // AudioContext can fail silently in some environments
