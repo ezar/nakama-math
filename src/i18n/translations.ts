@@ -35,6 +35,8 @@ export interface Translations {
   bestStreak: string
   accuracy: string
   rankUp: string
+  newLevelUnlocked: string
+  achievementUnlocked: string
   playAgain: string
   backToCrew: string
   shareResult: string
@@ -58,6 +60,7 @@ export interface Translations {
   gamesPlayed: string
   precision: string
   bestStreakShort: string
+  recentGames: string
   nextRank: (name: string, berries: number) => string
   maxRankReached: string
 
@@ -96,6 +99,8 @@ export const translations: Record<Locale, Translations> = {
     bestStreak: '🔥 Racha máxima',
     accuracy: '🎯 Precisión',
     rankUp: '🎉 ¡ASCENSO DE RANGO!',
+    newLevelUnlocked: '¡NUEVO NIVEL DESBLOQUEADO!',
+    achievementUnlocked: '¡Logro desbloqueado!',
     playAgain: '⚔️ Otra vez',
     backToCrew: '🏴‍☠️ Tripulación',
     shareResult: '📤 Compartir',
@@ -116,6 +121,7 @@ export const translations: Record<Locale, Translations> = {
     gamesPlayed: 'partidas',
     precision: 'precisión',
     bestStreakShort: 'mejor racha',
+    recentGames: 'Últimas partidas',
     nextRank: (name, berries) => `Faltan ${berries.toLocaleString()} 🪙 para ${name}`,
     maxRankReached: '¡Rango máximo alcanzado! 👑',
     ranks: ['Grumete', 'Marinero', 'Pirata', 'Primer Oficial', 'Capitán', 'Shichibukai', 'Yonko', 'Rey Pirata'],
@@ -152,6 +158,8 @@ export const translations: Record<Locale, Translations> = {
     bestStreak: '🔥 Best streak',
     accuracy: '🎯 Accuracy',
     rankUp: '🎉 RANK UP!',
+    newLevelUnlocked: 'NEW LEVEL UNLOCKED!',
+    achievementUnlocked: 'Achievement unlocked!',
     playAgain: '⚔️ Again',
     backToCrew: '🏴‍☠️ Crew',
     shareResult: '📤 Share',
@@ -172,6 +180,7 @@ export const translations: Record<Locale, Translations> = {
     gamesPlayed: 'games',
     precision: 'accuracy',
     bestStreakShort: 'best streak',
+    recentGames: 'Recent games',
     nextRank: (name, berries) => `${berries.toLocaleString()} 🪙 to reach ${name}`,
     maxRankReached: 'Max rank reached! 👑',
     ranks: ['Cabin Boy', 'Sailor', 'Pirate', 'First Mate', 'Captain', 'Warlord', 'Emperor', 'Pirate King'],
@@ -208,6 +217,8 @@ export const translations: Record<Locale, Translations> = {
     bestStreak: '🔥 Millor ratxa',
     accuracy: '🎯 Precisió',
     rankUp: '🎉 ASCENS DE RANG!',
+    newLevelUnlocked: 'NOU NIVELL DESBLOQUEJAT!',
+    achievementUnlocked: 'Èxit desbloquejat!',
     playAgain: '⚔️ Una altra',
     backToCrew: '🏴‍☠️ Tripulació',
     shareResult: '📤 Compartir',
@@ -228,6 +239,7 @@ export const translations: Record<Locale, Translations> = {
     gamesPlayed: 'partides',
     precision: 'precisió',
     bestStreakShort: 'millor ratxa',
+    recentGames: 'Darreres partides',
     nextRank: (name, berries) => `Falten ${berries.toLocaleString()} 🪙 per a ${name}`,
     maxRankReached: 'Rang màxim assolit! 👑',
     ranks: ['Grumete', 'Mariner', 'Pirata', 'Primer Oficial', 'Capità', 'Shichibukai', 'Yonko', 'Rei Pirata'],

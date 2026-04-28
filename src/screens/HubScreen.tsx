@@ -159,6 +159,20 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
             </div>
           ))}
         </div>
+
+        {/* Recent games */}
+        {(profile.recentGames ?? []).length > 0 && (
+          <div className="flex flex-col gap-1">
+            <p className="font-nunito text-xs text-gray-500">{t.recentGames}</p>
+            {(profile.recentGames ?? []).slice(0, 5).map((g, i) => (
+              <div key={i} className="flex items-center justify-between bg-navy-800 rounded-xl px-3 py-1.5">
+                <span className="font-nunito text-xs text-gray-400">{t.modes[g.mode].name}</span>
+                <span className="font-nunito text-xs text-gold-400">+{g.berriesEarned} 🪙</span>
+                <span className="font-nunito text-xs text-gray-500">{g.accuracy}%</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Level picker modal */}

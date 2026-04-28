@@ -225,9 +225,21 @@ export function IntroScreen({ onStart, onRanking }: IntroScreenProps) {
               exit={{ scale: 0.8 }}
               className="bg-navy-800 rounded-3xl p-6 w-full max-w-xs border border-navy-600 shadow-2xl text-center"
             >
-              <p className="font-nunito font-bold text-white mb-6">
-                {t.deletePirateConfirm(profiles.find(p => p.id === confirmDelete)?.name ?? '')}
-              </p>
+              {(() => {
+                const p = profiles.find(pr => pr.id === confirmDelete)
+                return (
+                  <div className="mb-6">
+                    <p className="font-nunito font-bold text-white mb-2">
+                      {t.deletePirateConfirm(p?.name ?? '')}
+                    </p>
+                    {p && p.berries > 0 && (
+                      <p className="font-nunito text-sm text-gold-400">
+                        🪙 {p.berries.toLocaleString()} berries perdidas
+                      </p>
+                    )}
+                  </div>
+                )
+              })()}
               <div className="flex gap-3">
                 <button
                   onClick={() => setConfirmDelete(null)}

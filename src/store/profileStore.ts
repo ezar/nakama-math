@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Profile } from '../engine/types'
+import type { Profile, RecentGame } from '../engine/types'
 
 interface ProfileStore {
   profiles: Profile[]
@@ -10,6 +10,8 @@ interface ProfileStore {
   selectProfile: (id: string) => void
   addBerries: (id: string, amount: number) => void
   updateStats: (id: string, correct: number, attempted: number, streak: number) => void
+  unlockAchievement: (id: string, achievementId: string) => boolean
+  addRecentGame: (id: string, game: RecentGame) => void
   currentProfile: () => Profile | null
 }
 
@@ -28,6 +30,8 @@ export const useProfileStore = create<ProfileStore>()(
             avatar,
             berries: 0,
             stats: { totalCorrect: 0, totalAttempted: 0, bestStreak: 0, gamesPlayed: 0 },
+            achievements: [],
+            recentGames: [],
             createdAt: new Date().toISOString(),
           }],
         }
@@ -58,6 +62,25 @@ export const useProfileStore = create<ProfileStore>()(
               gamesPlayed: p.stats.gamesPlayed + 1,
             },
           }
+        }),
+      })),
+
+      unlockAchievement: (id, achievementId) => {
+        const profile = get().profiles.find(p => p.id === id)
+        if (!profile || (profile.achievements ?? []).includes(achievementId)) return false
+        set(state => ({
+          profiles: state.profiles.map(p =>
+            p.id === id ? { ...p, achievements: [...(p.achievements ?? []), achievementId] } : p
+          ),
+        }))
+        return true
+      },
+
+      addRecentGame: (id, game) => set(state => ({
+        profiles: state.profiles.map(p => {
+          if (p.id !== id) return p
+          const updated = [game, ...(p.recentGames ?? [])].slice(0, 10)
+          return { ...p, recentGames: updated }
         }),
       })),
 

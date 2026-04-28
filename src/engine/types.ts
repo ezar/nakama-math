@@ -45,6 +45,15 @@ export interface GameConfig {
   multiplier: number
 }
 
+export interface RecentGame {
+  mode: GameMode
+  berriesEarned: number
+  correct: number
+  attempted: number
+  accuracy: number
+  date: string
+}
+
 export interface Profile {
   id: string
   name: string
@@ -56,6 +65,8 @@ export interface Profile {
     bestStreak: number
     gamesPlayed: number
   }
+  achievements: string[]
+  recentGames: RecentGame[]
   createdAt: string
 }
 

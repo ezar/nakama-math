@@ -3,9 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '../store/gameStore'
 import { useProfileStore } from '../store/profileStore'
 import { useTranslation } from '../i18n/useTranslation'
+import { useSettingsStore } from '../store/settingsStore'
 import { RankBadge } from '../components/RankBadge'
 import { getRankIndex } from '../utils/rankSystem'
+import { getUnlockedLevels } from '../config/levels'
+import { ACHIEVEMENTS, achievementNames } from '../config/achievements'
 import { useSoundEffect } from '../audio/useSoundEffect'
+import type { Locale } from '../i18n/translations'
 
 interface ResultsScreenProps {
   onPlayAgain: () => void
@@ -62,14 +66,22 @@ function useCountUp(target: number, duration = 1200, startDelay = 400) {
   return value
 }
 
+interface NewAchievement {
+  icon: string
+  name: string
+}
+
 export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
   const t = useTranslation()
+  const locale = useSettingsStore(s => s.locale) as Locale
   const { play } = useSoundEffect()
   const { lastResult, resetGame } = useGameStore()
-  const { currentProfile, addBerries, updateStats } = useProfileStore()
+  const { currentProfile, addBerries, updateStats, unlockAchievement, addRecentGame } = useProfileStore()
   const profile = currentProfile()
   const committed = useRef(false)
   const [showRankUp, setShowRankUp] = useState(false)
+  const [newLevelName, setNewLevelName] = useState<string | null>(null)
+  const [newAchievements, setNewAchievements] = useState<NewAchievement[]>([])
 
   const berriesDisplay = useCountUp(lastResult?.berriesEarned ?? 0)
 
@@ -77,17 +89,70 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
     if (!lastResult || !profile || committed.current) return
     committed.current = true
 
-    const oldRank = getRankIndex(profile.berries)
+    const oldBerries = profile.berries
+    const oldRank = getRankIndex(oldBerries)
+    const oldLevelCount = getUnlockedLevels(oldBerries).length
+
     addBerries(profile.id, lastResult.berriesEarned)
     updateStats(profile.id, lastResult.correct, lastResult.attempted, lastResult.maxStreak)
-    const newBerries = profile.berries + lastResult.berriesEarned
+    addRecentGame(profile.id, {
+      mode: lastResult.mode,
+      berriesEarned: lastResult.berriesEarned,
+      correct: lastResult.correct,
+      attempted: lastResult.attempted,
+      accuracy: lastResult.accuracy,
+      date: new Date().toISOString(),
+    })
+
+    const newBerries = oldBerries + lastResult.berriesEarned
     const newRank = getRankIndex(newBerries)
+    const newLevelCount = getUnlockedLevels(newBerries).length
 
     if (newRank > oldRank) {
       play('rankUp')
       setShowRankUp(true)
     }
-  }, [lastResult, profile, addBerries, updateStats, play])
+
+    if (newLevelCount > oldLevelCount) {
+      const levels = getUnlockedLevels(newBerries)
+      setNewLevelName(levels[levels.length - 1].name)
+    }
+
+    // Check achievements
+    const won = lastResult.correct > lastResult.attempted / 2
+    const updatedStats = {
+      gamesPlayed: profile.stats.gamesPlayed + 1,
+      totalCorrect: profile.stats.totalCorrect + lastResult.correct,
+      bestStreak: Math.max(profile.stats.bestStreak, lastResult.maxStreak),
+    }
+
+    const toCheck: Array<[string, boolean]> = [
+      ['firstGame',   updatedStats.gamesPlayed >= 1],
+      ['firstWin',    won],
+      ['perfectGame', lastResult.accuracy === 100 && lastResult.attempted >= 5],
+      ['streak3',     lastResult.maxStreak >= 3],
+      ['streak5',     lastResult.maxStreak >= 5],
+      ['streak10',    lastResult.maxStreak >= 10],
+      ['games10',     updatedStats.gamesPlayed >= 10],
+      ['games50',     updatedStats.gamesPlayed >= 50],
+      ['correct100',  updatedStats.totalCorrect >= 100],
+      ['correct500',  updatedStats.totalCorrect >= 500],
+      ['levelUp',     newLevelCount > oldLevelCount],
+    ]
+
+    const unlocked: NewAchievement[] = []
+    for (const [id, condition] of toCheck) {
+      if (condition) {
+        const wasNew = unlockAchievement(profile.id, id)
+        if (wasNew) {
+          const def = ACHIEVEMENTS.find(a => a.id === id)
+          if (def) unlocked.push({ icon: def.icon, name: achievementNames[def.nameKey][locale] })
+        }
+      }
+    }
+    if (unlocked.length > 0) setNewAchievements(unlocked)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   if (!lastResult || !profile) return null
 
@@ -116,6 +181,7 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
           {won ? t.victory : t.defeat}
         </motion.h1>
 
+        {/* Rank up banner */}
         <AnimatePresence>
           {showRankUp && (
             <motion.div
@@ -133,6 +199,42 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
               )}
             </motion.div>
           )}
+        </AnimatePresence>
+
+        {/* New level unlocked */}
+        <AnimatePresence>
+          {newLevelName && (
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0, y: -20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, delay: 0.5 }}
+              className="w-full py-3 px-4 rounded-2xl bg-emerald-500/20 border-2 border-emerald-400 text-center"
+            >
+              <p className="font-bangers text-xl text-emerald-400 tracking-widest">🗺️ {t.newLevelUnlocked}</p>
+              <p className="font-bangers text-2xl text-white">{newLevelName}</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* New achievements */}
+        <AnimatePresence>
+          {newAchievements.map((a, i) => (
+            <motion.div
+              key={a.name}
+              initial={{ scale: 0.5, opacity: 0, x: 40 }}
+              animate={{ scale: 1, opacity: 1, x: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, delay: 0.6 + i * 0.15 }}
+              className="w-full py-2 px-4 rounded-2xl bg-purple-500/20 border-2 border-purple-400 flex items-center gap-3"
+            >
+              <span className="text-2xl">{a.icon}</span>
+              <div>
+                <p className="font-nunito text-xs text-purple-400">{t.achievementUnlocked}</p>
+                <p className="font-bangers text-lg text-white leading-tight">{a.name}</p>
+              </div>
+            </motion.div>
+          ))}
         </AnimatePresence>
 
         {/* Profile + rank */}
