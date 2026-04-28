@@ -12,6 +12,7 @@ export interface Translations {
 
   battleMode: string
   competitiveMode: string
+  soloMode: string
   modes: {
     normal: { name: string; desc: string }
     speed: { name: string; desc: string }
@@ -19,6 +20,8 @@ export interface Translations {
     blitz: { name: string; desc: string }
     versus: { name: string; desc: string }
     duel: { name: string; desc: string }
+    timeTrial: { name: string; desc: string }
+    practice: { name: string; desc: string }
   }
 
   loadingChallenge: string
@@ -70,6 +73,17 @@ export interface Translations {
 
   ranks: string[]
 
+  dailyChallenge: string
+  dailyDone: string
+  dailyBonus: string
+  dailyStreakLabel: (n: number) => string
+  wrongAnswersTitle: string
+  noMistakes: string
+  timeTrialHeader: string
+  practiceHeader: string
+  chooseOperation: string
+  operationNames: Record<string, string>
+
   chooseOpponent: string
   difficulty: { easy: string; medium: string; hard: string; legend: string }
   choosePlayer2: string
@@ -95,13 +109,16 @@ export const translations: Record<Locale, Translations> = {
     deletePirateConfirm: (name) => `¿Eliminar a ${name}?`,
     battleMode: 'MODO DE BATALLA',
     competitiveMode: 'MODO COMPETITIVO',
+    soloMode: 'MODO LIBRE',
     modes: {
-      normal:   { name: 'Espadachín',    desc: '10 preguntas · tiempo libre' },
-      speed:    { name: 'Gear Second',   desc: '10 preguntas · 15 seg c/u' },
-      survival: { name: 'Supervivencia', desc: '3 vidas · infinitas preguntas' },
-      blitz:    { name: 'Tormenta',      desc: '10 preg. · 8 seg · ×2 puntos' },
-      versus:   { name: 'VS IA',         desc: 'Reta a un personaje One Piece' },
-      duel:     { name: 'Duelo Local',   desc: 'Turnos con otro pirata' },
+      normal:    { name: 'Espadachín',    desc: '10 preguntas · tiempo libre' },
+      speed:     { name: 'Gear Second',   desc: '10 preguntas · 15 seg c/u' },
+      survival:  { name: 'Supervivencia', desc: '3 vidas · infinitas preguntas' },
+      blitz:     { name: 'Tormenta',      desc: '10 preg. · 8 seg · ×2 puntos' },
+      versus:    { name: 'VS IA',         desc: 'Reta a un personaje One Piece' },
+      duel:      { name: 'Duelo Local',   desc: 'Turnos con otro pirata' },
+      timeTrial: { name: 'Contrarreloj',  desc: '60 seg · ¿Cuántas puedes?' },
+      practice:  { name: 'Práctica',      desc: 'Sin puntos · elige operación' },
     },
     loadingChallenge: 'Cargando reto...',
     lives: (n) => `${n} ${n === 1 ? 'vida' : 'vidas'}`,
@@ -145,6 +162,16 @@ export const translations: Record<Locale, Translations> = {
     nextRank: (name, berries) => `Faltan ${berries.toLocaleString()} 🪙 para ${name}`,
     maxRankReached: '¡Rango máximo alcanzado! 👑',
     ranks: ['Grumete', 'Marinero', 'Pirata', 'Primer Oficial', 'Capitán', 'Shichibukai', 'Yonko', 'Rey Pirata'],
+    dailyChallenge: '⚓ Reto Diario',
+    dailyDone: '✅ Completado hoy',
+    dailyBonus: '×3 Berries',
+    dailyStreakLabel: (n) => `${n} día${n === 1 ? '' : 's'} seguido${n === 1 ? '' : 's'}`,
+    wrongAnswersTitle: 'Errores',
+    noMistakes: '¡Sin errores! 🎉',
+    timeTrialHeader: 'CONTRARRELOJ',
+    practiceHeader: 'PRÁCTICA LIBRE',
+    chooseOperation: 'Elige operación',
+    operationNames: { add: 'Suma', sub: 'Resta', mul: 'Multiplicación', div: 'División', frac: 'Fracciones', pct: 'Porcentajes', exp: 'Potencias' },
     chooseOpponent: 'Elige tu rival',
     difficulty: { easy: 'Fácil', medium: 'Medio', hard: 'Difícil', legend: 'Leyenda' },
     choosePlayer2: 'Elige el segundo pirata',
@@ -169,13 +196,16 @@ export const translations: Record<Locale, Translations> = {
     deletePirateConfirm: (name) => `Delete ${name}?`,
     battleMode: 'BATTLE MODE',
     competitiveMode: 'COMPETITIVE MODE',
+    soloMode: 'FREE MODE',
     modes: {
-      normal:   { name: 'Swordsman',   desc: '10 questions · no time limit' },
-      speed:    { name: 'Gear Second', desc: '10 questions · 15 sec each' },
-      survival: { name: 'Survival',    desc: '3 lives · endless questions' },
-      blitz:    { name: 'Storm',       desc: '10 qs · 8 sec · ×2 points' },
-      versus:   { name: 'VS AI',       desc: 'Challenge a One Piece character' },
-      duel:     { name: 'Local Duel',  desc: 'Take turns with another pirate' },
+      normal:    { name: 'Swordsman',   desc: '10 questions · no time limit' },
+      speed:     { name: 'Gear Second', desc: '10 questions · 15 sec each' },
+      survival:  { name: 'Survival',    desc: '3 lives · endless questions' },
+      blitz:     { name: 'Storm',       desc: '10 qs · 8 sec · ×2 points' },
+      versus:    { name: 'VS AI',       desc: 'Challenge a One Piece character' },
+      duel:      { name: 'Local Duel',  desc: 'Take turns with another pirate' },
+      timeTrial: { name: 'Time Trial',  desc: '60 sec · how many can you get?' },
+      practice:  { name: 'Practice',    desc: 'No score · choose operation' },
     },
     loadingChallenge: 'Loading challenge...',
     lives: (n) => `${n} ${n === 1 ? 'life' : 'lives'}`,
@@ -219,6 +249,16 @@ export const translations: Record<Locale, Translations> = {
     nextRank: (name, berries) => `${berries.toLocaleString()} 🪙 to reach ${name}`,
     maxRankReached: 'Max rank reached! 👑',
     ranks: ['Cabin Boy', 'Sailor', 'Pirate', 'First Mate', 'Captain', 'Warlord', 'Emperor', 'Pirate King'],
+    dailyChallenge: '⚓ Daily Challenge',
+    dailyDone: '✅ Done today',
+    dailyBonus: '×3 Berries',
+    dailyStreakLabel: (n) => `${n} day${n === 1 ? '' : 's'} in a row`,
+    wrongAnswersTitle: 'Mistakes',
+    noMistakes: 'No mistakes! 🎉',
+    timeTrialHeader: 'TIME TRIAL',
+    practiceHeader: 'FREE PRACTICE',
+    chooseOperation: 'Choose operation',
+    operationNames: { add: 'Addition', sub: 'Subtraction', mul: 'Multiplication', div: 'Division', frac: 'Fractions', pct: 'Percentages', exp: 'Powers' },
     chooseOpponent: 'Choose your rival',
     difficulty: { easy: 'Easy', medium: 'Medium', hard: 'Hard', legend: 'Legend' },
     choosePlayer2: 'Choose second pirate',
@@ -243,13 +283,16 @@ export const translations: Record<Locale, Translations> = {
     deletePirateConfirm: (name) => `Eliminar ${name}?`,
     battleMode: 'MODE DE BATALLA',
     competitiveMode: 'MODE COMPETITIU',
+    soloMode: 'MODE LLIURE',
     modes: {
-      normal:   { name: 'Espadatxí',     desc: '10 preguntes · sense límit' },
-      speed:    { name: 'Gear Second',   desc: '10 preguntes · 15 seg c/u' },
-      survival: { name: 'Supervivència', desc: '3 vides · preguntes infinites' },
-      blitz:    { name: 'Tempesta',      desc: '10 preg. · 8 seg · ×2 punts' },
-      versus:   { name: 'VS IA',         desc: 'Repte a un personatge One Piece' },
-      duel:     { name: 'Duel Local',    desc: 'Torns amb un altre pirata' },
+      normal:    { name: 'Espadatxí',     desc: '10 preguntes · sense límit' },
+      speed:     { name: 'Gear Second',   desc: '10 preguntes · 15 seg c/u' },
+      survival:  { name: 'Supervivència', desc: '3 vides · preguntes infinites' },
+      blitz:     { name: 'Tempesta',      desc: '10 preg. · 8 seg · ×2 punts' },
+      versus:    { name: 'VS IA',         desc: 'Repte a un personatge One Piece' },
+      duel:      { name: 'Duel Local',    desc: 'Torns amb un altre pirata' },
+      timeTrial: { name: 'Contrarellotge', desc: '60 seg · quantes pots?' },
+      practice:  { name: 'Pràctica',      desc: 'Sense punts · tria operació' },
     },
     loadingChallenge: 'Carregant repte...',
     lives: (n) => `${n} ${n === 1 ? 'vida' : 'vides'}`,
@@ -293,6 +336,16 @@ export const translations: Record<Locale, Translations> = {
     nextRank: (name, berries) => `Falten ${berries.toLocaleString()} 🪙 per a ${name}`,
     maxRankReached: 'Rang màxim assolit! 👑',
     ranks: ['Grumete', 'Mariner', 'Pirata', 'Primer Oficial', 'Capità', 'Shichibukai', 'Yonko', 'Rei Pirata'],
+    dailyChallenge: '⚓ Repte Diari',
+    dailyDone: '✅ Completat avui',
+    dailyBonus: '×3 Berries',
+    dailyStreakLabel: (n) => `${n} dia${n === 1 ? '' : 'dies'} seguit${n === 1 ? '' : 's'}`,
+    wrongAnswersTitle: 'Errors',
+    noMistakes: 'Sense errors! 🎉',
+    timeTrialHeader: 'CONTRARELLOTGE',
+    practiceHeader: 'PRÀCTICA LLIURE',
+    chooseOperation: 'Tria operació',
+    operationNames: { add: 'Suma', sub: 'Resta', mul: 'Multiplicació', div: 'Divisió', frac: 'Fraccions', pct: 'Percentatges', exp: 'Potències' },
     chooseOpponent: 'Tria el teu rival',
     difficulty: { easy: 'Fàcil', medium: 'Mitjà', hard: 'Difícil', legend: 'Llegenda' },
     choosePlayer2: 'Tria el segon pirata',

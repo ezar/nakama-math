@@ -9,6 +9,7 @@ import { getRankIndex } from '../utils/rankSystem'
 import { getUnlockedLevels } from '../config/levels'
 import { ACHIEVEMENTS, achievementNames } from '../config/achievements'
 import { useSoundEffect } from '../audio/useSoundEffect'
+import { todayDateString, yesterdayDateString } from '../engine/seededRandom'
 import type { Locale } from '../i18n/translations'
 
 interface ResultsScreenProps {
@@ -71,15 +72,19 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
   const t = useTranslation()
   const locale = useSettingsStore(s => s.locale) as Locale
   const { play } = useSoundEffect()
-  const { lastResult, resetGame } = useGameStore()
-  const { currentProfile, addBerries, updateStats, unlockAchievement, addRecentGame } = useProfileStore()
+  const { lastResult, resetGame, wrongAnswers } = useGameStore()
+  const { currentProfile, addBerries, updateStats, unlockAchievement, addRecentGame, completeDailyChallenge } = useProfileStore()
   const profile = currentProfile()
   const committed = useRef(false)
   const [showRankUp, setShowRankUp] = useState(false)
   const [newLevelName, setNewLevelName] = useState<string | null>(null)
   const [newAchievements, setNewAchievements] = useState<NewAchievement[]>([])
+  const [showErrors, setShowErrors] = useState(false)
 
   const berriesDisplay = useCountUp(lastResult?.berriesEarned ?? 0)
+
+  const todayStr = todayDateString()
+  const yesterdayStr = yesterdayDateString()
 
   useEffect(() => {
     if (!lastResult || !profile || committed.current) return
@@ -88,6 +93,11 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
     const oldBerries = profile.berries
     const oldRank = getRankIndex(oldBerries)
     const oldLevelCount = getUnlockedLevels(oldBerries).length
+
+    // Mark daily challenge complete and update streak
+    if (lastResult.isDaily) {
+      completeDailyChallenge(profile.id, todayStr, yesterdayStr)
+    }
 
     // Update current player (P2 in duel, solo player in other modes)
     addBerries(profile.id, lastResult.berriesEarned)
@@ -147,6 +157,14 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
       ['levelUp',     newLevelCount > oldLevelCount],
     ]
 
+    // Daily streak achievements — read fresh state after completeDailyChallenge
+    if (lastResult.isDaily) {
+      const freshProfile = useProfileStore.getState().profiles.find(p => p.id === profile.id)
+      const newDailyStreak = freshProfile?.dailyStreak ?? 0
+      toCheck.push(['daily7',  newDailyStreak >= 7])
+      toCheck.push(['daily30', newDailyStreak >= 30])
+    }
+
     const unlocked: NewAchievement[] = []
     for (const [id, condition] of toCheck) {
       if (condition) {
@@ -171,12 +189,10 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
   const isVersus = lastResult.mode === 'versus'
   const isDuel = lastResult.mode === 'duel'
 
-  // Versus: did player beat the bot?
   const botSnap = lastResult.botSnap
   const playerBeatsBot = botSnap ? lastResult.correct > botSnap.correct : false
   const botBeatsPlayer = botSnap ? botSnap.correct > lastResult.correct : false
 
-  // Duel: who won?
   const p1Snap = lastResult.duelP1Snap
   const p2Correct = lastResult.correct
   const p1Correct = p1Snap?.correct ?? 0
@@ -195,7 +211,7 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
   const showConfetti = won || showRankUp || playerBeatsBot || (isDuel && duelWinnerName === profile.name)
 
   const stats = [
-    { label: t.berriesEarned, value: `+${berriesDisplay.toLocaleString()} 🪙`, highlight: true },
+    { label: t.berriesEarned, value: `+${berriesDisplay.toLocaleString()} 🪙`, highlight: true, isDaily: lastResult.isDaily },
     { label: t.correct, value: `${lastResult.correct} / ${lastResult.attempted}`, highlight: false },
     { label: t.bestStreak, value: `🔥 ${lastResult.maxStreak}`, highlight: false },
     { label: t.accuracy, value: `${lastResult.accuracy}%`, highlight: false },
@@ -353,10 +369,61 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
               className={`rounded-2xl p-4 text-center border ${s.highlight ? 'bg-gold-400/10 border-gold-400' : 'bg-navy-700 border-navy-600'}`}
             >
               <p className={`font-bangers text-2xl ${s.highlight ? 'text-gold-400' : 'text-white'}`}>{s.value}</p>
+              {'isDaily' in s && s.isDaily && (
+                <span className="inline-block font-nunito text-xs font-bold text-gold-400 bg-gold-400/20 px-2 py-0.5 rounded-full mt-1">
+                  {t.dailyBonus}
+                </span>
+              )}
               <p className="font-nunito text-xs text-gray-400 mt-1">{s.label}</p>
             </motion.div>
           ))}
         </div>
+
+        {/* Error review */}
+        {lastResult.attempted > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="w-full"
+          >
+            {wrongAnswers.length === 0 ? (
+              <p className="text-center font-nunito text-sm text-emerald-400">{t.noMistakes}</p>
+            ) : (
+              <>
+                <button
+                  onClick={() => setShowErrors(v => !v)}
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-navy-700 border border-navy-600 font-nunito text-sm text-gray-300 hover:text-white transition-colors"
+                >
+                  <span>{t.wrongAnswersTitle} ({wrongAnswers.length})</span>
+                  <span>{showErrors ? '▲' : '▼'}</span>
+                </button>
+                <AnimatePresence>
+                  {showErrors && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="flex flex-col gap-2 mt-2">
+                        {wrongAnswers.map((wa, i) => (
+                          <div key={i} className="flex items-center justify-between px-3 py-2 rounded-xl bg-navy-800 border border-navy-600">
+                            <span className="font-nunito text-sm text-white">{wa.display} = ?</span>
+                            <div className="flex items-center gap-3 font-nunito text-sm font-bold">
+                              <span className="text-pirate-red">✗ {wa.userAnswer}</span>
+                              <span className="text-emerald-400">✓ {wa.correctAnswer}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </>
+            )}
+          </motion.div>
+        )}
 
         {/* Actions */}
         <div className="flex gap-3 w-full">

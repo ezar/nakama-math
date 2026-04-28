@@ -29,7 +29,7 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
     config, questions, currentIndex,
     streak, lives,
     answerQuestion, loseLife, nextQuestion, finishGame, resetGame,
-    setPendingBotSnap, startDuelP2,
+    setPendingBotSnap, startDuelP2, recordWrongAnswer,
   } = useGameStore()
 
   const profiles = useProfileStore(s => s.profiles)
@@ -40,18 +40,53 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
   const [answerStates, setAnswerStates] = useState<Record<string, AnswerState>>({})
   const [feedback, setFeedback] = useState<string | null>(null)
   const [timeLeft, setTimeLeft] = useState<number | null>(null)
+  const [globalTimeLeft, setGlobalTimeLeft] = useState<number | null>(null)
   const [locked, setLocked] = useState(false)
   const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null)
   const [duelPhase, setDuelPhase] = useState<DuelPhase>('p1')
   const [botLastAnswer, setBotLastAnswer] = useState<'correct' | 'wrong' | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const globalTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const botCorrectRef = useRef(0)
+  const finishedRef = useRef(false)
 
   const isVersus = config?.mode === 'versus'
   const isDuel = config?.mode === 'duel'
   const isSurvival = config?.mode === 'survival'
+  const isTimeTrial = config?.mode === 'timeTrial'
+  const isPractice = config?.mode === 'practice'
+  const isInfinite = isSurvival || isTimeTrial || isPractice
   const hasTimer = !!config?.timePerQuestion
+
+  // Initialize 60-second global countdown for timeTrial
+  useEffect(() => {
+    if (config?.mode !== 'timeTrial') return
+    finishedRef.current = false
+    setGlobalTimeLeft(60)
+    return () => { if (globalTimerRef.current) clearInterval(globalTimerRef.current) }
+  }, [config])
+
+  // Tick global timer
+  useEffect(() => {
+    if (globalTimeLeft === null) return
+    if (globalTimeLeft <= 0) {
+      if (!finishedRef.current) {
+        finishedRef.current = true
+        play('timeout')
+        finishGame()
+        onFinish()
+      }
+      return
+    }
+    if (globalTimeLeft <= 5) play('tick')
+    const id = setInterval(() => {
+      setGlobalTimeLeft(prev => (prev === null || prev <= 1) ? 0 : prev - 1)
+    }, 1000)
+    globalTimerRef.current = id
+    return () => clearInterval(id)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [globalTimeLeft])
 
   // Keyboard shortcuts: 1/2/3/4 map to answer buttons
   useEffect(() => {
@@ -68,9 +103,14 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
 
   useEffect(() => {
     if (!config || duelPhase === 'handoff') return
-    if (isSurvival) {
+    if (isInfinite) {
       const level = getLevelById(config.levelId)
-      if (level) setCurrentQuestion(generateQuestion(level))
+      if (level) {
+        const effectiveLevel = isPractice && config.practiceOperation
+          ? { ...level, operations: [config.practiceOperation] }
+          : level
+        setCurrentQuestion(generateQuestion(effectiveLevel))
+      }
     } else {
       setCurrentQuestion(questions[currentIndex] ?? null)
     }
@@ -79,7 +119,7 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
     setLocked(false)
     setBotLastAnswer(null)
     if (config.timePerQuestion) setTimeLeft(config.timePerQuestion)
-  }, [currentIndex, config, isSurvival, questions, duelPhase])
+  }, [currentIndex, config, isInfinite, isPractice, questions, duelPhase])
 
   useEffect(() => {
     if (!hasTimer || !timeLeft || locked) return
@@ -107,8 +147,8 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
   }, [timeLeft])
 
   const advance = useCallback((continueGame: boolean) => {
-    if (!config) return
-    const total = isSurvival ? Infinity : config.totalQuestions
+    if (!config || finishedRef.current) return
+    const total = isInfinite ? Infinity : config.totalQuestions
     const nextIdx = currentIndex + 1
 
     if (!continueGame || nextIdx >= total) {
@@ -128,17 +168,20 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
         return
       }
 
-      finishGame()
-      onFinish()
+      if (!finishedRef.current) {
+        finishedRef.current = true
+        finishGame()
+        onFinish()
+      }
       return
     }
 
-    if (isSurvival) {
+    if (isInfinite) {
       useGameStore.setState(s => ({ currentIndex: s.currentIndex + 1 }))
     } else {
       nextQuestion()
     }
-  }, [config, currentIndex, isSurvival, isVersus, isDuel, duelPhase, p1Profile,
+  }, [config, currentIndex, isInfinite, isVersus, isDuel, duelPhase, p1Profile,
       finishGame, nextQuestion, onFinish, setPendingBotSnap, startDuelP2])
 
   function handleAnswer(answer: string) {
@@ -156,7 +199,6 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
     })
     setAnswerStates(newStates)
 
-    // Simulate bot answer for versus mode
     if (isVersus && config.bot) {
       const delay = 450 + Math.random() * 550
       setTimeout(() => {
@@ -177,18 +219,25 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
     } else {
       play('wrong')
       navigator.vibrate?.([60, 40, 60])
+      recordWrongAnswer(currentQuestion.display, currentQuestion.correctAnswer, answer)
       setFeedback(t.wrongMessages[Math.floor(Math.random() * t.wrongMessages.length)])
       answerQuestion(false, 0)
 
       const delay = config.mode === 'blitz' ? 600 : 900
       if (config.mode === 'speed' || config.mode === 'blitz') {
         loseLife()
-        setTimeout(() => { finishGame(); onFinish() }, delay)
+        if (!finishedRef.current) {
+          finishedRef.current = true
+          setTimeout(() => { finishGame(); onFinish() }, delay)
+        }
       } else if (config.mode === 'survival') {
         loseLife()
         const newLives = useGameStore.getState().lives
         if (newLives <= 0) {
-          setTimeout(() => { finishGame(); onFinish() }, 900)
+          if (!finishedRef.current) {
+            finishedRef.current = true
+            setTimeout(() => { finishGame(); onFinish() }, 900)
+          }
         } else {
           setTimeout(() => advance(true), 900)
         }
@@ -200,6 +249,8 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
 
   function handleExit() {
     if (timerRef.current) clearInterval(timerRef.current)
+    if (globalTimerRef.current) clearInterval(globalTimerRef.current)
+    finishedRef.current = true
     resetGame()
     onExit()
   }
@@ -210,7 +261,7 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
     </div>
   )
 
-  const progress = isSurvival ? null : ((currentIndex + 1) / config.totalQuestions)
+  const progress = isInfinite ? null : ((currentIndex + 1) / config.totalQuestions)
   const currentPlayer = isDuel ? (duelPhase === 'p2' ? p2Profile : p1Profile) : null
 
   return (
@@ -222,15 +273,21 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
           <button
             onClick={() => setShowExitConfirm(true)}
             aria-label={t.exitGame}
-            className="font-nunito text-xs text-gray-500 hover:text-pirate-red transition-colors shrink-0"
+            className={`font-nunito transition-colors shrink-0 ${
+              isPractice
+                ? 'text-xs font-bold text-gray-300 hover:text-white'
+                : 'text-xs text-gray-500 hover:text-pirate-red'
+            }`}
           >
-            ✕
+            {isPractice ? t.exitGame : '✕'}
           </button>
 
           {isSurvival ? (
             <div className="flex-1">
               <HpBar current={lives} max={config.livesCount ?? 3} />
             </div>
+          ) : isTimeTrial || isPractice ? (
+            <div className="flex-1" />
           ) : (
             <div className="flex-1 h-2 bg-navy-700 rounded-full overflow-hidden">
               {progress !== null && (
@@ -243,14 +300,12 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
             </div>
           )}
 
-          {/* Duel player label */}
           {isDuel && currentPlayer && (
             <span className="font-nunito text-xs text-purple-400 font-bold shrink-0">
               {currentPlayer.avatar} {currentPlayer.name}
             </span>
           )}
 
-          {/* Versus bot score */}
           {isVersus && config.bot && (
             <div className="flex items-center gap-1 shrink-0">
               <span className="text-sm">{config.bot.avatar}</span>
@@ -260,12 +315,12 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
             </div>
           )}
 
-          <StreakBadge streak={streak} baseMultiplier={config?.multiplier ?? 1} />
+          {!isPractice && <StreakBadge streak={streak} baseMultiplier={config?.multiplier ?? 1} />}
         </div>
 
         {/* Gear Second banner */}
         <AnimatePresence>
-          {streak >= 5 && !shouldReduceMotion && (
+          {streak >= 5 && !shouldReduceMotion && !isPractice && (
             <motion.div
               initial={{ opacity: 0, scaleX: 0 }}
               animate={{ opacity: 1, scaleX: 1 }}
@@ -277,9 +332,20 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
           )}
         </AnimatePresence>
 
-        {/* Timer */}
+        {/* Global countdown for Time Trial */}
+        {isTimeTrial && globalTimeLeft !== null && (
+          <div className={`text-center font-bangers text-5xl leading-none ${
+            globalTimeLeft <= 10 ? 'text-pirate-red animate-pulse' : 'text-gold-400'
+          }`}>
+            {globalTimeLeft}s
+          </div>
+        )}
+
+        {/* Per-question timer (speed / blitz) */}
         {hasTimer && timeLeft !== null && (
-          <div className={`text-center font-bangers text-4xl leading-none ${timeLeft <= 3 ? 'text-pirate-red animate-pulse' : 'text-gold-400'}`}>
+          <div className={`text-center font-bangers text-4xl leading-none ${
+            timeLeft <= 3 ? 'text-pirate-red animate-pulse' : 'text-gold-400'
+          }`}>
             {timeLeft}
           </div>
         )}
@@ -335,7 +401,10 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
 
         {/* Counter */}
         <p className="text-center font-nunito text-xs text-gray-500 pb-1">
-          {isSurvival ? t.lives(lives) : `${currentIndex + 1} / ${config.totalQuestions}`}
+          {isSurvival ? t.lives(lives)
+            : isTimeTrial ? `${currentIndex + 1} ✓`
+            : isPractice ? `${currentIndex + 1}`
+            : `${currentIndex + 1} / ${config.totalQuestions}`}
         </p>
       </div>
 

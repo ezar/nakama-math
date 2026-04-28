@@ -12,6 +12,7 @@ interface ProfileStore {
   updateStats: (id: string, correct: number, attempted: number, streak: number) => void
   unlockAchievement: (id: string, achievementId: string) => boolean
   addRecentGame: (id: string, game: RecentGame) => void
+  completeDailyChallenge: (id: string, todayStr: string, yesterdayStr: string) => void
   currentProfile: () => Profile | null
 }
 
@@ -81,6 +82,16 @@ export const useProfileStore = create<ProfileStore>()(
           if (p.id !== id) return p
           const updated = [game, ...(p.recentGames ?? [])].slice(0, 10)
           return { ...p, recentGames: updated }
+        }),
+      })),
+
+      completeDailyChallenge: (id, todayStr, yesterdayStr) => set(state => ({
+        profiles: state.profiles.map(p => {
+          if (p.id !== id) return p
+          const prevDate = p.lastDailyDate ?? ''
+          const prevStreak = p.dailyStreak ?? 0
+          const newStreak = prevDate === yesterdayStr ? prevStreak + 1 : 1
+          return { ...p, lastDailyDate: todayStr, dailyStreak: newStreak }
         }),
       })),
 

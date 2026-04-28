@@ -16,6 +16,8 @@ export const achievementNames = {
   correct100:   { es: '100 aciertos',         en: '100 Correct',        ca: '100 encerts'         },
   correct500:   { es: '500 aciertos',         en: '500 Correct',        ca: '500 encerts'         },
   levelUp:      { es: 'Nuevo nivel',          en: 'New Level',          ca: 'Nou nivell'          },
+  daily7:       { es: '7 días seguidos',      en: '7-Day Streak',       ca: '7 dies seguits'      },
+  daily30:      { es: '30 días seguidos',     en: '30-Day Streak',      ca: '30 dies seguits'     },
 } as const
 
 export const ACHIEVEMENTS: Achievement[] = [
@@ -30,4 +32,6 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'correct100',  icon: '💯',   nameKey: 'correct100'  },
   { id: 'correct500',  icon: '👑',   nameKey: 'correct500'  },
   { id: 'levelUp',     icon: '🗺️',  nameKey: 'levelUp'     },
+  { id: 'daily7',      icon: '📅',   nameKey: 'daily7'      },
+  { id: 'daily30',     icon: '🌟',   nameKey: 'daily30'     },
 ]

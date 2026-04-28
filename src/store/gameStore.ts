@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Question, GameConfig, GameResult, BotSnap, DuelP1Snap } from '../engine/types'
+import type { Question, GameConfig, GameResult, BotSnap, DuelP1Snap, WrongAnswer } from '../engine/types'
 
 interface GameStore {
   config: GameConfig | null
@@ -15,9 +15,11 @@ interface GameStore {
   lastResult: GameResult | null
   pendingBotSnap: BotSnap | null
   pendingDuelP1Snap: DuelP1Snap | null
+  wrongAnswers: WrongAnswer[]
 
   startGame: (config: GameConfig, questions: Question[]) => void
   answerQuestion: (isCorrect: boolean, pointValue: number) => void
+  recordWrongAnswer: (display: string, correctAnswer: number, userAnswer: string) => void
   loseLife: () => void
   nextQuestion: () => void
   finishGame: () => void
@@ -47,6 +49,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
   lastResult: null,
   pendingBotSnap: null,
   pendingDuelP1Snap: null,
+  wrongAnswers: [],
 
   startGame: (config, questions) => set({
     config,
@@ -62,7 +65,12 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     lastResult: null,
     pendingBotSnap: null,
     pendingDuelP1Snap: null,
+    wrongAnswers: [],
   }),
+
+  recordWrongAnswer: (display, correctAnswer, userAnswer) => set(state => ({
+    wrongAnswers: [...state.wrongAnswers, { display, correctAnswer, userAnswer }],
+  })),
 
   answerQuestion: (isCorrect, pointValue) => set(state => {
     if (!state.config) return state
@@ -94,6 +102,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
       maxStreak: state.maxStreak,
       accuracy,
       mode: state.config?.mode ?? 'normal',
+      ...(state.config?.isDaily ? { isDaily: true } : {}),
       ...(state.pendingBotSnap ? { botSnap: state.pendingBotSnap } : {}),
       ...(state.pendingDuelP1Snap ? { duelP1Snap: state.pendingDuelP1Snap } : {}),
     }
@@ -114,6 +123,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     lastResult: null,
     pendingBotSnap: null,
     pendingDuelP1Snap: null,
+    wrongAnswers: [],
   }),
 
   setPendingBotSnap: (snap) => set({ pendingBotSnap: snap }),

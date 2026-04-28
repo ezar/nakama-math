@@ -34,7 +34,10 @@ export interface Question {
   opChar: string
 }
 
-export type GameMode = 'normal' | 'speed' | 'survival' | 'blitz' | 'versus' | 'duel'
+export type GameMode =
+  | 'normal' | 'speed' | 'survival' | 'blitz'
+  | 'versus' | 'duel'
+  | 'timeTrial' | 'practice'
 
 export interface BotConfig {
   id: string
@@ -50,8 +53,16 @@ export interface GameConfig {
   timePerQuestion?: number
   livesCount?: number
   multiplier: number
+  isDaily?: boolean
+  practiceOperation?: Operation
   bot?: BotConfig
   duelPlayer2Id?: string
+}
+
+export interface WrongAnswer {
+  display: string
+  correctAnswer: number
+  userAnswer: string
 }
 
 export interface RecentGame {
@@ -77,6 +88,8 @@ export interface Profile {
   achievements: string[]
   recentGames: RecentGame[]
   createdAt: string
+  lastDailyDate?: string
+  dailyStreak?: number
 }
 
 export interface BotSnap {
@@ -103,6 +116,7 @@ export interface GameResult {
   maxStreak: number
   accuracy: number
   mode: GameMode
+  isDaily?: boolean
   botSnap?: BotSnap
   duelP1Snap?: DuelP1Snap
 }
