@@ -26,6 +26,8 @@
   .safe-left   { padding-left:   env(safe-area-inset-left);   }
   .safe-right  { padding-right:  env(safe-area-inset-right);  }
   .pb-safe     { padding-bottom: env(safe-area-inset-bottom); }
+  /* Clears the fixed footer on any device, including iOS PWA with home indicator */
+  .pb-footer   { padding-bottom: max(2.5rem, calc(env(safe-area-inset-bottom) + 1.75rem)); }
 
   /* h-screen that respects the dynamic viewport on mobile */
   .h-dvh { height: 100dvh; }

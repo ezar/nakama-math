@@ -170,7 +170,7 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
   ]
 
   return (
-    <div className="h-full overflow-y-auto bg-navy-900 flex flex-col items-center justify-center p-4 pb-10 gap-4">
+    <div className="h-full overflow-y-auto bg-navy-900 flex flex-col items-center justify-center p-4 pb-footer gap-4">
       {(won || showRankUp) && <Confetti />}
 
       <div className="w-full max-w-md flex flex-col items-center gap-3">

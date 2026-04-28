@@ -74,7 +74,7 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
   const isMaxLevel = unlockedLevels.length === 1
 
   return (
-    <div className="h-full overflow-hidden bg-navy-900 flex flex-col items-center px-4 pt-3 pb-10">
+    <div className="h-full overflow-hidden bg-navy-900 flex flex-col items-center px-4 pt-3 pb-footer">
       <div className="w-full max-w-md flex flex-col gap-3">
 
         {/* Back + profile header */}
