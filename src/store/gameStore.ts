@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Question, GameConfig, GameResult } from '../engine/types'
+import type { Question, GameConfig, GameResult, BotSnap, DuelP1Snap } from '../engine/types'
 
 interface GameStore {
   config: GameConfig | null
@@ -13,6 +13,8 @@ interface GameStore {
   berriesEarned: number
   isFinished: boolean
   lastResult: GameResult | null
+  pendingBotSnap: BotSnap | null
+  pendingDuelP1Snap: DuelP1Snap | null
 
   startGame: (config: GameConfig, questions: Question[]) => void
   answerQuestion: (isCorrect: boolean, pointValue: number) => void
@@ -20,6 +22,8 @@ interface GameStore {
   nextQuestion: () => void
   finishGame: () => void
   resetGame: () => void
+  setPendingBotSnap: (snap: BotSnap) => void
+  startDuelP2: (p1Id: string, p1Name: string, p1Avatar: string) => void
 }
 
 function streakMultiplier(streak: number, baseMultiplier: number): number {
@@ -41,6 +45,8 @@ export const useGameStore = create<GameStore>()((set, get) => ({
   berriesEarned: 0,
   isFinished: false,
   lastResult: null,
+  pendingBotSnap: null,
+  pendingDuelP1Snap: null,
 
   startGame: (config, questions) => set({
     config,
@@ -54,6 +60,8 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     berriesEarned: 0,
     isFinished: false,
     lastResult: null,
+    pendingBotSnap: null,
+    pendingDuelP1Snap: null,
   }),
 
   answerQuestion: (isCorrect, pointValue) => set(state => {
@@ -71,14 +79,9 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     }
   }),
 
-  loseLife: () => set(state => {
-    const newLives = state.lives - 1
-    return { lives: newLives, streak: 0 }
-  }),
+  loseLife: () => set(state => ({ lives: state.lives - 1, streak: 0 })),
 
-  nextQuestion: () => set(state => ({
-    currentIndex: state.currentIndex + 1,
-  })),
+  nextQuestion: () => set(state => ({ currentIndex: state.currentIndex + 1 })),
 
   finishGame: () => set(state => {
     const accuracy = state.attempted > 0
@@ -91,6 +94,8 @@ export const useGameStore = create<GameStore>()((set, get) => ({
       maxStreak: state.maxStreak,
       accuracy,
       mode: state.config?.mode ?? 'normal',
+      ...(state.pendingBotSnap ? { botSnap: state.pendingBotSnap } : {}),
+      ...(state.pendingDuelP1Snap ? { duelP1Snap: state.pendingDuelP1Snap } : {}),
     }
     return { isFinished: true, lastResult: result }
   }),
@@ -107,7 +112,30 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     berriesEarned: 0,
     isFinished: false,
     lastResult: null,
+    pendingBotSnap: null,
+    pendingDuelP1Snap: null,
   }),
+
+  setPendingBotSnap: (snap) => set({ pendingBotSnap: snap }),
+
+  startDuelP2: (p1Id, p1Name, p1Avatar) => set(state => ({
+    pendingDuelP1Snap: {
+      profileId: p1Id,
+      profileName: p1Name,
+      profileAvatar: p1Avatar,
+      correct: state.correct,
+      attempted: state.attempted,
+      berriesEarned: state.berriesEarned,
+      maxStreak: state.maxStreak,
+    },
+    currentIndex: 0,
+    correct: 0,
+    attempted: 0,
+    streak: 0,
+    maxStreak: 0,
+    berriesEarned: 0,
+    isFinished: false,
+  })),
 
   currentQuestion: () => {
     const { questions, currentIndex } = get()

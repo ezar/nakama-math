@@ -30,7 +30,6 @@ function Confetti() {
       drift: (Math.random() - 0.5) * 200,
     }))
   )
-
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-40">
       {particles.current.map(p => (
@@ -66,10 +65,7 @@ function useCountUp(target: number, duration = 1200, startDelay = 400) {
   return value
 }
 
-interface NewAchievement {
-  icon: string
-  name: string
-}
+interface NewAchievement { icon: string; name: string }
 
 export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
   const t = useTranslation()
@@ -93,6 +89,7 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
     const oldRank = getRankIndex(oldBerries)
     const oldLevelCount = getUnlockedLevels(oldBerries).length
 
+    // Update current player (P2 in duel, solo player in other modes)
     addBerries(profile.id, lastResult.berriesEarned)
     updateStats(profile.id, lastResult.correct, lastResult.attempted, lastResult.maxStreak)
     addRecentGame(profile.id, {
@@ -104,21 +101,31 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
       date: new Date().toISOString(),
     })
 
+    // Also update P1 in duel mode
+    if (lastResult.duelP1Snap) {
+      const p1 = lastResult.duelP1Snap
+      addBerries(p1.profileId, p1.berriesEarned)
+      updateStats(p1.profileId, p1.correct, p1.attempted, p1.maxStreak)
+      addRecentGame(p1.profileId, {
+        mode: 'duel',
+        berriesEarned: p1.berriesEarned,
+        correct: p1.correct,
+        attempted: p1.attempted,
+        accuracy: p1.attempted > 0 ? Math.round((p1.correct / p1.attempted) * 100) : 0,
+        date: new Date().toISOString(),
+      })
+    }
+
     const newBerries = oldBerries + lastResult.berriesEarned
     const newRank = getRankIndex(newBerries)
     const newLevelCount = getUnlockedLevels(newBerries).length
 
-    if (newRank > oldRank) {
-      play('rankUp')
-      setShowRankUp(true)
-    }
-
+    if (newRank > oldRank) { play('rankUp'); setShowRankUp(true) }
     if (newLevelCount > oldLevelCount) {
       const levels = getUnlockedLevels(newBerries)
       setNewLevelName(levels[levels.length - 1].name)
     }
 
-    // Check achievements
     const won = lastResult.correct > lastResult.attempted / 2
     const updatedStats = {
       gamesPlayed: profile.stats.gamesPlayed + 1,
@@ -161,6 +168,31 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
 
   const won = lastResult.correct > lastResult.attempted / 2
   const updatedProfile = currentProfile()
+  const isVersus = lastResult.mode === 'versus'
+  const isDuel = lastResult.mode === 'duel'
+
+  // Versus: did player beat the bot?
+  const botSnap = lastResult.botSnap
+  const playerBeatsBot = botSnap ? lastResult.correct > botSnap.correct : false
+  const botBeatsPlayer = botSnap ? botSnap.correct > lastResult.correct : false
+
+  // Duel: who won?
+  const p1Snap = lastResult.duelP1Snap
+  const p2Correct = lastResult.correct
+  const p1Correct = p1Snap?.correct ?? 0
+  const duelWinnerName = p1Snap
+    ? p2Correct > p1Correct ? profile.name
+      : p1Correct > p2Correct ? p1Snap.profileName
+      : null
+    : null
+
+  const headlineVictory = isVersus
+    ? (playerBeatsBot ? t.victory : botBeatsPlayer ? t.defeat : '⚔️ DRAW')
+    : isDuel
+    ? (duelWinnerName ? t.duelWinner(duelWinnerName) : t.itsATie)
+    : (won ? t.victory : t.defeat)
+
+  const showConfetti = won || showRankUp || playerBeatsBot || (isDuel && duelWinnerName === profile.name)
 
   const stats = [
     { label: t.berriesEarned, value: `+${berriesDisplay.toLocaleString()} 🪙`, highlight: true },
@@ -171,7 +203,7 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
 
   return (
     <div className="h-full overflow-y-auto bg-navy-900 flex flex-col items-center justify-center p-4 pb-footer gap-4">
-      {(won || showRankUp) && <Confetti />}
+      {showConfetti && <Confetti />}
 
       <div className="w-full max-w-md flex flex-col items-center gap-3">
 
@@ -181,8 +213,60 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
           transition={{ type: 'spring', stiffness: 200, delay: 0.1 }}
           className="font-bangers text-5xl text-gold-400 text-center"
         >
-          {won ? t.victory : t.defeat}
+          {headlineVictory}
         </motion.h1>
+
+        {/* Versus comparison panel */}
+        {isVersus && botSnap && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="w-full rounded-2xl border border-purple-500/40 bg-purple-500/10 p-4"
+          >
+            <p className="font-bangers text-sm text-purple-400 text-center tracking-widest mb-3">{t.vsResult}</p>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { avatar: updatedProfile?.avatar ?? '🏴‍☠️', name: t.youLabel, correct: lastResult.correct, accuracy: lastResult.accuracy, winner: playerBeatsBot },
+                { avatar: botSnap.avatar, name: botSnap.name, correct: botSnap.correct, accuracy: botSnap.attempted > 0 ? Math.round((botSnap.correct / botSnap.attempted) * 100) : 0, winner: botBeatsPlayer },
+              ].map((side) => (
+                <div key={side.name} className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 ${side.winner ? 'border-gold-400 bg-gold-400/10' : 'border-navy-600 bg-navy-700'}`}>
+                  <span className="text-3xl">{side.avatar}</span>
+                  <p className="font-nunito font-bold text-white text-sm">{side.name}</p>
+                  <p className="font-bangers text-2xl text-white">{side.correct}/{lastResult.attempted}</p>
+                  <p className="font-nunito text-xs text-gray-400">{side.accuracy}%</p>
+                  {side.winner && <span className="text-gold-400 text-xs font-bold">🏆</span>}
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Duel comparison panel */}
+        {isDuel && p1Snap && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="w-full rounded-2xl border border-purple-500/40 bg-purple-500/10 p-4"
+          >
+            <p className="font-bangers text-sm text-purple-400 text-center tracking-widest mb-3">{t.duelResult}</p>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { avatar: p1Snap.profileAvatar, name: p1Snap.profileName, correct: p1Correct, attempted: p1Snap.attempted, winner: p1Correct > p2Correct },
+                { avatar: updatedProfile?.avatar ?? '🏴‍☠️', name: profile.name, correct: p2Correct, attempted: lastResult.attempted, winner: p2Correct > p1Correct },
+              ].map((side) => (
+                <div key={side.name} className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 ${side.winner ? 'border-gold-400 bg-gold-400/10' : 'border-navy-600 bg-navy-700'}`}>
+                  <span className="text-3xl">{side.avatar}</span>
+                  <p className="font-nunito font-bold text-white text-sm">{side.name}</p>
+                  <p className="font-bangers text-2xl text-white">{side.correct}/{side.attempted}</p>
+                  <p className="font-nunito text-xs text-gray-400">{side.attempted > 0 ? Math.round((side.correct / side.attempted) * 100) : 0}%</p>
+                  {side.winner && <span className="text-gold-400 text-xs font-bold">🏆</span>}
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         {/* Rank up banner */}
         <AnimatePresence>
@@ -220,7 +304,7 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
           )}
         </AnimatePresence>
 
-        {/* New achievements — shown as a compact stack */}
+        {/* New achievements */}
         {newAchievements.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -277,22 +361,16 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
         {/* Actions */}
         <div className="flex gap-3 w-full">
           <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
+            whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
             onClick={() => { resetGame(); onBack() }}
             className="flex-1 py-4 rounded-2xl font-nunito font-bold text-gray-300 border border-navy-600 hover:border-gray-500 hover:text-white transition-colors"
           >
             {t.backToCrew}
           </motion.button>
           <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.65 }}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.65 }}
+            whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
             onClick={() => { resetGame(); onPlayAgain() }}
             className="flex-1 py-4 rounded-2xl font-nunito font-bold bg-gold-400 text-navy-900 hover:bg-gold-500 transition-colors"
           >
@@ -303,9 +381,7 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
         {/* Share */}
         {typeof navigator.share === 'function' && updatedProfile && (
           <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.75 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.75 }}
             onClick={() => navigator.share({
               title: 'Nakama Math',
               text: t.shareText(updatedProfile.name, lastResult.berriesEarned, lastResult.accuracy),

@@ -11,11 +11,14 @@ export interface Translations {
   deletePirateConfirm: (name: string) => string
 
   battleMode: string
+  competitiveMode: string
   modes: {
     normal: { name: string; desc: string }
     speed: { name: string; desc: string }
     survival: { name: string; desc: string }
     blitz: { name: string; desc: string }
+    versus: { name: string; desc: string }
+    duel: { name: string; desc: string }
   }
 
   loadingChallenge: string
@@ -66,6 +69,18 @@ export interface Translations {
   maxRankReached: string
 
   ranks: string[]
+
+  chooseOpponent: string
+  difficulty: { easy: string; medium: string; hard: string; legend: string }
+  choosePlayer2: string
+  passTurnTo: (name: string) => string
+  p1Finished: string
+  tapToStart: string
+  duelWinner: (name: string) => string
+  itsATie: string
+  vsResult: string
+  duelResult: string
+  youLabel: string
 }
 
 export const translations: Record<Locale, Translations> = {
@@ -79,11 +94,14 @@ export const translations: Record<Locale, Translations> = {
     ranking: '🏆 Ranking',
     deletePirateConfirm: (name) => `¿Eliminar a ${name}?`,
     battleMode: 'MODO DE BATALLA',
+    competitiveMode: 'MODO COMPETITIVO',
     modes: {
       normal:   { name: 'Espadachín',    desc: '10 preguntas · tiempo libre' },
       speed:    { name: 'Gear Second',   desc: '10 preguntas · 15 seg c/u' },
       survival: { name: 'Supervivencia', desc: '3 vidas · infinitas preguntas' },
       blitz:    { name: 'Tormenta',      desc: '10 preg. · 8 seg · ×2 puntos' },
+      versus:   { name: 'VS IA',         desc: 'Reta a un personaje One Piece' },
+      duel:     { name: 'Duelo Local',   desc: 'Turnos con otro pirata' },
     },
     loadingChallenge: 'Cargando reto...',
     lives: (n) => `${n} ${n === 1 ? 'vida' : 'vidas'}`,
@@ -127,6 +145,17 @@ export const translations: Record<Locale, Translations> = {
     nextRank: (name, berries) => `Faltan ${berries.toLocaleString()} 🪙 para ${name}`,
     maxRankReached: '¡Rango máximo alcanzado! 👑',
     ranks: ['Grumete', 'Marinero', 'Pirata', 'Primer Oficial', 'Capitán', 'Shichibukai', 'Yonko', 'Rey Pirata'],
+    chooseOpponent: 'Elige tu rival',
+    difficulty: { easy: 'Fácil', medium: 'Medio', hard: 'Difícil', legend: 'Leyenda' },
+    choosePlayer2: 'Elige el segundo pirata',
+    passTurnTo: (name) => `¡Pasa el turno a ${name}!`,
+    p1Finished: '¡Turno terminado!',
+    tapToStart: 'Toca para empezar',
+    duelWinner: (name) => `🏆 ¡${name} gana!`,
+    itsATie: '⚔️ ¡Empate!',
+    vsResult: 'RESULTADO VS IA',
+    duelResult: 'RESULTADO DUELO',
+    youLabel: 'Tú',
   },
 
   en: {
@@ -139,11 +168,14 @@ export const translations: Record<Locale, Translations> = {
     ranking: '🏆 Ranking',
     deletePirateConfirm: (name) => `Delete ${name}?`,
     battleMode: 'BATTLE MODE',
+    competitiveMode: 'COMPETITIVE MODE',
     modes: {
       normal:   { name: 'Swordsman',   desc: '10 questions · no time limit' },
       speed:    { name: 'Gear Second', desc: '10 questions · 15 sec each' },
       survival: { name: 'Survival',    desc: '3 lives · endless questions' },
       blitz:    { name: 'Storm',       desc: '10 qs · 8 sec · ×2 points' },
+      versus:   { name: 'VS AI',       desc: 'Challenge a One Piece character' },
+      duel:     { name: 'Local Duel',  desc: 'Take turns with another pirate' },
     },
     loadingChallenge: 'Loading challenge...',
     lives: (n) => `${n} ${n === 1 ? 'life' : 'lives'}`,
@@ -187,6 +219,17 @@ export const translations: Record<Locale, Translations> = {
     nextRank: (name, berries) => `${berries.toLocaleString()} 🪙 to reach ${name}`,
     maxRankReached: 'Max rank reached! 👑',
     ranks: ['Cabin Boy', 'Sailor', 'Pirate', 'First Mate', 'Captain', 'Warlord', 'Emperor', 'Pirate King'],
+    chooseOpponent: 'Choose your rival',
+    difficulty: { easy: 'Easy', medium: 'Medium', hard: 'Hard', legend: 'Legend' },
+    choosePlayer2: 'Choose second pirate',
+    passTurnTo: (name) => `Pass the device to ${name}!`,
+    p1Finished: 'Your turn is done!',
+    tapToStart: 'Tap to start',
+    duelWinner: (name) => `🏆 ${name} wins!`,
+    itsATie: '⚔️ It\'s a tie!',
+    vsResult: 'VS AI RESULT',
+    duelResult: 'DUEL RESULT',
+    youLabel: 'You',
   },
 
   ca: {
@@ -199,11 +242,14 @@ export const translations: Record<Locale, Translations> = {
     ranking: '🏆 Rànquing',
     deletePirateConfirm: (name) => `Eliminar ${name}?`,
     battleMode: 'MODE DE BATALLA',
+    competitiveMode: 'MODE COMPETITIU',
     modes: {
       normal:   { name: 'Espadatxí',     desc: '10 preguntes · sense límit' },
       speed:    { name: 'Gear Second',   desc: '10 preguntes · 15 seg c/u' },
       survival: { name: 'Supervivència', desc: '3 vides · preguntes infinites' },
       blitz:    { name: 'Tempesta',      desc: '10 preg. · 8 seg · ×2 punts' },
+      versus:   { name: 'VS IA',         desc: 'Repte a un personatge One Piece' },
+      duel:     { name: 'Duel Local',    desc: 'Torns amb un altre pirata' },
     },
     loadingChallenge: 'Carregant repte...',
     lives: (n) => `${n} ${n === 1 ? 'vida' : 'vides'}`,
@@ -247,5 +293,16 @@ export const translations: Record<Locale, Translations> = {
     nextRank: (name, berries) => `Falten ${berries.toLocaleString()} 🪙 per a ${name}`,
     maxRankReached: 'Rang màxim assolit! 👑',
     ranks: ['Grumete', 'Mariner', 'Pirata', 'Primer Oficial', 'Capità', 'Shichibukai', 'Yonko', 'Rei Pirata'],
+    chooseOpponent: 'Tria el teu rival',
+    difficulty: { easy: 'Fàcil', medium: 'Mitjà', hard: 'Difícil', legend: 'Llegenda' },
+    choosePlayer2: 'Tria el segon pirata',
+    passTurnTo: (name) => `Passa el dispositiu a ${name}!`,
+    p1Finished: 'El teu torn ha acabat!',
+    tapToStart: 'Toca per començar',
+    duelWinner: (name) => `🏆 ${name} guanya!`,
+    itsATie: '⚔️ Empat!',
+    vsResult: 'RESULTAT VS IA',
+    duelResult: 'RESULTAT DUEL',
+    youLabel: 'Tu',
   },
 }
