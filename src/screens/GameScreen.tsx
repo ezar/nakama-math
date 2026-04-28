@@ -158,7 +158,7 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
   const progress = isSurvival ? null : ((currentIndex + 1) / config.totalQuestions)
 
   return (
-    <div className="h-full bg-navy-900 flex flex-col items-center px-4 pt-4 pb-2">
+    <div className="h-full bg-navy-900 flex flex-col items-center px-4 pt-4 pb-footer">
       <div className="w-full max-w-md flex flex-col gap-3 h-full">
 
         {/* Top bar: exit + progress + streak */}

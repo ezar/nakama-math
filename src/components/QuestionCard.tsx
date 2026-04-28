@@ -16,7 +16,7 @@ export function QuestionCard({ question }: QuestionCardProps) {
       className="flex flex-col items-center gap-4 py-8 px-6 bg-navy-700 rounded-3xl border-2 border-navy-600 shadow-2xl"
     >
       <span className="text-5xl">{question.opChar}</span>
-      <p className="font-bangers text-5xl text-white tracking-wide text-center leading-tight">
+      <p className="font-nunito font-black text-5xl text-white text-center leading-tight tracking-tight">
         {question.display}
       </p>
     </motion.div>

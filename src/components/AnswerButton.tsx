@@ -16,7 +16,7 @@ const stateClasses: Record<AnswerState, string> = {
 }
 
 export function AnswerButton({ label, state, disabled, onClick }: AnswerButtonProps) {
-  const hoverClasses = !disabled && state === 'idle' ? 'hover:bg-navy-600 hover:border-gold-400' : ''
+  const hoverClasses = !disabled && state === 'idle' ? '[@media(hover:hover)]:hover:bg-navy-600 [@media(hover:hover)]:hover:border-gold-400' : ''
 
   return (
     <motion.button
