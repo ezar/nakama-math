@@ -41,3 +41,12 @@
     background-size: 24px 24px;
   }
 }
+
+/* Hide scrollbars visually while keeping scroll functionality */
+.overflow-y-auto {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.overflow-y-auto::-webkit-scrollbar {
+  display: none;
+}
