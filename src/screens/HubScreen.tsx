@@ -148,7 +148,8 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
   const availableOps = selectedLevel.operations
 
   return (
-    <div className="h-full overflow-y-auto bg-navy-900 flex flex-col items-center px-4 pt-3 pb-footer">
+    <div className="h-full bg-navy-900 overflow-hidden pb-footer">
+      <div className="h-full overflow-y-auto flex flex-col items-center px-4 pt-3">
       <div className="w-full max-w-md flex flex-col gap-3">
 
         {/* Header */}
@@ -474,6 +475,7 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
       {showAchievements && (
         <AchievementGallery unlockedIds={profile.achievements ?? []} locale={locale} onClose={() => setShowAchievements(false)} />
       )}
+      </div>
     </div>
   )
 }

@@ -218,7 +218,9 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
   ]
 
   return (
-    <div className="h-full overflow-y-auto bg-navy-900 flex flex-col items-center justify-center p-4 pb-footer gap-4">
+    <div className="h-full bg-navy-900 overflow-hidden pb-footer">
+      <div className="h-full overflow-y-auto">
+        <div className="min-h-full flex flex-col items-center justify-center p-4 gap-4">
       {showConfetti && <Confetti />}
 
       <div className="w-full max-w-md flex flex-col items-center gap-3">
@@ -458,6 +460,8 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
             {t.shareResult}
           </motion.button>
         )}
+      </div>
+        </div>
       </div>
     </div>
   )

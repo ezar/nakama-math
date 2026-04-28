@@ -6,7 +6,7 @@
 [![PWA](https://img.shields.io/badge/PWA-offline--first-5a0fc8?logo=pwa&logoColor=white)](https://web.dev/progressive-web-apps/)
 [![License](https://img.shields.io/badge/license-private-lightgrey)](#license)
 
-A math practice web app for kids with a One Piece theme. Players earn Berries, unlock pirate ranks, and battle through four game modes — all without an internet connection or user account.
+A math practice PWA for kids with a One Piece theme. Players earn Berries, climb pirate ranks, and compete across eight game modes — all without an internet connection or user account.
 
 **🌐 Live app: [ezar.github.io/nakama-math](https://ezar.github.io/nakama-math/)**
 
@@ -14,20 +14,48 @@ A math practice web app for kids with a One Piece theme. Players earn Berries, u
 
 ## Features
 
-- **8 pirate ranks** — Cabin Boy → Pirate King, each unlocked by earning Berries
-- **4 game modes** — Swordsman (relaxed), Gear Second (timed), Survival (3 lives), Storm (blitz)
+- **8 pirate ranks** — Cabin Boy → Pirate King, unlocked by earning Berries
+- **8 game modes** — relaxed, timed, survival, blitz, VS AI, local duel, time trial, practice
+- **Daily Challenge** — same 5 questions for every player each day (seeded RNG), ×3 Berry bonus, daily streak tracking
 - **Streak multipliers** — ×1.2 at 3, ×2 at 5 (Gear Second), ×3 at 10 (Gear Third)
+- **Error review** — collapsible post-game list of every wrong answer with the correct solution
+- **VS AI** — challenge one of 4 One Piece characters (Chopper → Robin, 40 %–95 % accuracy)
+- **Local Duel** — two players share the device, pass-and-play with full handoff screen
+- **Time Trial** — answer as many as possible in 60 seconds
+- **Practice mode** — choose a specific operation, infinite questions, zero pressure
 - **6 player profiles** stored in `localStorage` — no account needed
+- **18 achievements** — streaks, milestones, rank-ups, level unlocks, daily streaks
 - **Offline-first PWA** — installable, works without internet after first visit
-- **3 languages** — Spanish, English, Catalan (auto-detected from the browser)
+- **3 languages** — Spanish, English, Catalan (auto-detected from browser)
 - **Synthesized audio** — sound effects via Web Audio API, zero audio files
-- **Accessible** — keyboard navigation, `prefers-reduced-motion` respected, AA contrast
+- **Accessible** — keyboard navigation (1–4 keys), `prefers-reduced-motion` respected, AA contrast
+
+---
+
+## Game modes
+
+| Mode | Description | Win condition |
+|------|-------------|---------------|
+| **Swordsman** | 10 questions, no time limit | All 10 answered |
+| **Gear Second** | 10 questions, 15 s each, 1 life | All 10 answered |
+| **Survival** | Infinite questions, 3 lives | Last as long as possible |
+| **Storm** | 10 questions, 8 s each, ×2 points | All 10 answered |
+| **VS AI** | 10 questions vs a One Piece character | More correct answers |
+| **Local Duel** | 10 questions each, pass the device | More correct answers |
+| **Time Trial** | Infinite questions in 60 seconds | Most correct answers |
+| **Practice** | Infinite questions, chosen operation | No end — exit when done |
+
+---
+
+## Daily Challenge
+
+Every day all players worldwide receive the same 5 questions, generated deterministically from the date (`YYYYMMDD` seed via mulberry32). Results earn a **×3 Berry multiplier**. Completing the challenge on consecutive days builds a **daily streak**, which unlocks the `📅 7-Day Streak` and `🌟 30-Day Streak` achievements.
 
 ---
 
 ## Math levels
 
-| # | Rank | Operations | Berries to unlock |
+| # | Name | Operations | Berries to unlock |
 |---|------|-----------|-------------------|
 | 1 | Cabin Boy | + / − up to 10 | 0 |
 | 2 | Sailor | + / − up to 20 | 500 |
@@ -53,7 +81,8 @@ Adding a new level means adding one object to `src/config/levels.ts` — no othe
 | Styles | Tailwind CSS |
 | Fonts | Bangers (titles) + Nunito (body) via Google Fonts |
 | PWA | vite-plugin-pwa + Workbox |
-| Tests | Vitest |
+| RNG | mulberry32 seeded PRNG for deterministic daily questions |
+| Tests | Vitest (60 tests) |
 
 ---
 
@@ -61,43 +90,27 @@ Adding a new level means adding one object to `src/config/levels.ts` — no othe
 
 ```
 src/
-├── config/
-│   └── levels.ts          # ← only file to edit for new levels
-├── engine/
-│   ├── QuestionEngine.ts  # pure functions, no React imports
-│   ├── QuestionEngine.test.ts
-│   └── types.ts
-├── store/
-│   ├── profileStore.ts    # persisted: profiles, berries, stats
-│   ├── gameStore.ts       # ephemeral: current game state
-│   └── settingsStore.ts   # persisted: locale, sound
-├── screens/
-│   ├── IntroScreen.tsx
-│   ├── HubScreen.tsx
-│   ├── GameScreen.tsx
-│   ├── ResultsScreen.tsx
-│   └── RankingScreen.tsx
-├── components/            # ProfileCard, QuestionCard, AnswerButton…
-├── audio/
-│   └── useSoundEffect.ts  # Web Audio API, no audio files
-├── i18n/
-│   ├── translations.ts    # ES / EN / CA
-│   └── useTranslation.ts
-└── utils/
-    └── rankSystem.ts
+├── audio/          Web Audio API sound engine
+├── components/     Shared UI (AnswerButton, QuestionCard, HpBar, …)
+├── config/         Game configuration (levels, bots, achievements, daily)
+├── engine/         Pure-TS question generator + seeded RNG
+├── i18n/           Translations (es / en / ca)
+├── screens/        Full-screen views (Hub, Game, Results, Ranking)
+├── store/          Zustand stores (game, profile, settings)
+└── utils/          Rank system helpers
 ```
 
 ---
 
-## Getting started
+## Development
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173/nakama-math/
+npm run dev        # Vite dev server
 ```
 
 ```bash
-npm run test       # Vitest — must pass before any commit
+npm run test       # Vitest — 60 tests, must pass before any commit
 npm run type-check # tsc --noEmit
 npm run build      # production build → dist/
 npm run preview    # preview the production build
@@ -107,7 +120,7 @@ npm run preview    # preview the production build
 
 ## Question engine
 
-The engine is pure TypeScript — no React, no side effects. Every question is generated algorithmically at runtime: no pre-written question banks.
+The engine is pure TypeScript — no React, no side effects. Every question is generated algorithmically at runtime: no pre-written question banks. It accepts an optional seeded RNG (`RNG = () => number`) so the Daily Challenge can produce identical questions for every player.
 
 Distractors are crafted per operation to be educationally meaningful:
 
