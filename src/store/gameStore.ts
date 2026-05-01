@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Question, GameConfig, GameResult, BotSnap, DuelP1Snap, WrongAnswer } from '../engine/types'
+import type { Question, GameConfig, GameResult, BotSnap, DuelP1Snap, WrongAnswer, Operation, OperationEntry } from '../engine/types'
 
 interface GameStore {
   config: GameConfig | null
@@ -16,10 +16,12 @@ interface GameStore {
   pendingBotSnap: BotSnap | null
   pendingDuelP1Snap: DuelP1Snap | null
   wrongAnswers: WrongAnswer[]
+  operationLog: OperationEntry[]
 
   startGame: (config: GameConfig, questions: Question[]) => void
   answerQuestion: (isCorrect: boolean, pointValue: number) => void
   recordWrongAnswer: (display: string, correctAnswer: number, userAnswer: string) => void
+  logOperation: (operation: Operation, correct: boolean) => void
   loseLife: () => void
   nextQuestion: () => void
   finishGame: () => void
@@ -50,6 +52,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
   pendingBotSnap: null,
   pendingDuelP1Snap: null,
   wrongAnswers: [],
+  operationLog: [],
 
   startGame: (config, questions) => set({
     config,
@@ -66,10 +69,15 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     pendingBotSnap: null,
     pendingDuelP1Snap: null,
     wrongAnswers: [],
+    operationLog: [],
   }),
 
   recordWrongAnswer: (display, correctAnswer, userAnswer) => set(state => ({
     wrongAnswers: [...state.wrongAnswers, { display, correctAnswer, userAnswer }],
+  })),
+
+  logOperation: (operation, correct) => set(state => ({
+    operationLog: [...state.operationLog, { operation, correct }],
   })),
 
   answerQuestion: (isCorrect, pointValue) => set(state => {
@@ -124,6 +132,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     pendingBotSnap: null,
     pendingDuelP1Snap: null,
     wrongAnswers: [],
+    operationLog: [],
   }),
 
   setPendingBotSnap: (snap) => set({ pendingBotSnap: snap }),
@@ -145,6 +154,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     maxStreak: 0,
     berriesEarned: 0,
     isFinished: false,
+    operationLog: [],
   })),
 
   currentQuestion: () => {

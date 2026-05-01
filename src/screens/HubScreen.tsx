@@ -6,6 +6,8 @@ import { useTranslation } from '../i18n/useTranslation'
 import { useSettingsStore } from '../store/settingsStore'
 import { RankBadge } from '../components/RankBadge'
 import { AchievementGallery } from '../components/AchievementGallery'
+import { StreakCalendar } from '../components/StreakCalendar'
+import { ShopModal } from '../components/ShopModal'
 import { getUnlockedLevels, getLevelById, LEVELS } from '../config/levels'
 import { generateQuestion } from '../engine/QuestionEngine'
 import { getRankIndex, getNextRankBerries } from '../utils/rankSystem'
@@ -43,11 +45,15 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
 
   const unlockedLevels = getUnlockedLevels(profile.berries)
   const [selectedLevel, setSelectedLevel] = useState<LevelConfig>(unlockedLevels[unlockedLevels.length - 1])
+  const inputMode = useSettingsStore(s => s.inputMode)
+  const toggleInputMode = useSettingsStore(s => s.toggleInputMode)
+
   const [showLevelPicker, setShowLevelPicker] = useState(false)
   const [showAchievements, setShowAchievements] = useState(false)
   const [showBotPicker, setShowBotPicker] = useState(false)
   const [showDuelPicker, setShowDuelPicker] = useState(false)
   const [showPracticePicker, setShowPracticePicker] = useState(false)
+  const [showShop, setShowShop] = useState(false)
 
   const rankIdx = getRankIndex(profile.berries)
   const nextBerries = getNextRankBerries(profile.berries)
@@ -168,17 +174,37 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
               </div>
             </div>
           </div>
-          <button
-            onClick={() => setShowAchievements(true)}
-            className="relative text-gray-500 hover:text-gold-400 transition-colors text-xl"
-          >
-            🏆
-            {(profile.achievements ?? []).length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-purple-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
-                {(profile.achievements ?? []).length}
-              </span>
-            )}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleInputMode}
+              title={t.inputModeLabel}
+              className={`font-nunito text-xs px-2 py-1 rounded-lg border transition-colors ${
+                inputMode === 'keyboard'
+                  ? 'border-gold-400 text-gold-400 bg-gold-400/10'
+                  : 'border-navy-600 text-gray-500 hover:text-gray-300'
+              }`}
+            >
+              ⌨️
+            </button>
+            <button
+              onClick={() => setShowShop(true)}
+              className="text-gray-500 hover:text-gold-400 transition-colors text-xl"
+              title={t.shopTitle}
+            >
+              🛒
+            </button>
+            <button
+              onClick={() => setShowAchievements(true)}
+              className="relative text-gray-500 hover:text-gold-400 transition-colors text-xl"
+            >
+              🏆
+              {(profile.achievements ?? []).length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-purple-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                  {(profile.achievements ?? []).length}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Progress bar */}
@@ -326,6 +352,31 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
           ))}
         </div>
 
+        {/* Operation breakdown */}
+        {profile.operationStats && Object.keys(profile.operationStats).length > 0 && (
+          <div className="flex flex-col gap-1.5 bg-navy-800 rounded-2xl p-3">
+            <p className="font-nunito text-xs text-gray-500">{t.operationBreakdown}</p>
+            {(Object.entries(profile.operationStats) as [string, { correct: number; attempted: number }][]).map(([op, st]) => {
+              const pct = st.attempted > 0 ? Math.round((st.correct / st.attempted) * 100) : 0
+              return (
+                <div key={op} className="flex items-center gap-2">
+                  <span className="font-nunito text-xs text-gray-400 w-24 shrink-0">{t.operationNames[op] ?? op}</span>
+                  <div className="flex-1 h-1.5 bg-navy-700 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{
+                        width: `${pct}%`,
+                        backgroundColor: pct >= 80 ? '#10b981' : pct >= 50 ? '#f59e0b' : '#ef4444',
+                      }}
+                    />
+                  </div>
+                  <span className="font-nunito text-xs text-gray-400 w-8 text-right shrink-0">{pct}%</span>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
         {/* Recent games */}
         <div className="flex flex-col gap-1">
           <p className="font-nunito text-xs text-gray-500">{t.recentGames}</p>
@@ -341,6 +392,15 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
             ))
           )}
         </div>
+
+        {/* Activity calendar */}
+        <StreakCalendar
+          activityDates={profile.activityDates ?? []}
+          lastDailyDate={profile.lastDailyDate}
+          label={t.activityLabel}
+        />
+
+        <div className="pb-4" />
       </div>
 
       {/* Level picker */}
@@ -475,6 +535,12 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
       {showAchievements && (
         <AchievementGallery unlockedIds={profile.achievements ?? []} locale={locale} onClose={() => setShowAchievements(false)} />
       )}
+
+      <AnimatePresence>
+        {showShop && (
+          <ShopModal profileId={currentProfileId!} onClose={() => setShowShop(false)} />
+        )}
+      </AnimatePresence>
       </div>
     </div>
   )

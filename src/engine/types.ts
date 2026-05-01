@@ -90,6 +90,9 @@ export interface Profile {
   createdAt: string
   lastDailyDate?: string
   dailyStreak?: number
+  operationStats?: Partial<Record<Operation, { correct: number; attempted: number }>>
+  ownedAvatars?: string[]
+  activityDates?: string[]
 }
 
 export interface BotSnap {
@@ -107,6 +110,11 @@ export interface DuelP1Snap {
   attempted: number
   berriesEarned: number
   maxStreak: number
+}
+
+export interface OperationEntry {
+  operation: Operation
+  correct: boolean
 }
 
 export interface GameResult {

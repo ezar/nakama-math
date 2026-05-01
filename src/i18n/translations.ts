@@ -95,6 +95,16 @@ export interface Translations {
   vsResult: string
   duelResult: string
   youLabel: string
+
+  inputModeLabel: string
+  typeYourAnswer: string
+  operationBreakdown: string
+  activityLabel: string
+  shopTitle: string
+  shopAvatars: string
+  equipLabel: string
+  ownedLabel: string
+  notEnoughBerries: string
 }
 
 export const translations: Record<Locale, Translations> = {
@@ -183,6 +193,15 @@ export const translations: Record<Locale, Translations> = {
     vsResult: 'RESULTADO VS IA',
     duelResult: 'RESULTADO DUELO',
     youLabel: 'Tú',
+    inputModeLabel: '⌨️ Teclado',
+    typeYourAnswer: 'Escribe...',
+    operationBreakdown: 'Por operación',
+    activityLabel: 'Actividad',
+    shopTitle: 'Tienda',
+    shopAvatars: 'Avatares premium',
+    equipLabel: 'Equipar',
+    ownedLabel: '✓',
+    notEnoughBerries: 'Berries insuficientes',
   },
 
   en: {
@@ -270,6 +289,15 @@ export const translations: Record<Locale, Translations> = {
     vsResult: 'VS AI RESULT',
     duelResult: 'DUEL RESULT',
     youLabel: 'You',
+    inputModeLabel: '⌨️ Keyboard',
+    typeYourAnswer: 'Type answer...',
+    operationBreakdown: 'By operation',
+    activityLabel: 'Activity',
+    shopTitle: 'Shop',
+    shopAvatars: 'Premium avatars',
+    equipLabel: 'Equip',
+    ownedLabel: '✓',
+    notEnoughBerries: 'Not enough berries',
   },
 
   ca: {
@@ -357,5 +385,14 @@ export const translations: Record<Locale, Translations> = {
     vsResult: 'RESULTAT VS IA',
     duelResult: 'RESULTAT DUEL',
     youLabel: 'Tu',
+    inputModeLabel: '⌨️ Teclat',
+    typeYourAnswer: 'Escriu...',
+    operationBreakdown: 'Per operació',
+    activityLabel: 'Activitat',
+    shopTitle: 'Botiga',
+    shopAvatars: 'Avatars premium',
+    equipLabel: 'Equipar',
+    ownedLabel: '✓',
+    notEnoughBerries: 'Berries insuficients',
   },
 }

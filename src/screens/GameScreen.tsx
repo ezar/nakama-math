@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useGameStore } from '../store/gameStore'
 import { useProfileStore } from '../store/profileStore'
+import { useSettingsStore } from '../store/settingsStore'
 import { generateQuestion } from '../engine/QuestionEngine'
 import { getLevelById } from '../config/levels'
 import { QuestionCard } from '../components/QuestionCard'
@@ -25,11 +26,13 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
   const shouldReduceMotion = useReducedMotion()
   const { play } = useSoundEffect()
 
+  const inputMode = useSettingsStore(s => s.inputMode)
+
   const {
     config, questions, currentIndex,
     streak, lives,
     answerQuestion, loseLife, nextQuestion, finishGame, resetGame,
-    setPendingBotSnap, startDuelP2, recordWrongAnswer,
+    setPendingBotSnap, startDuelP2, recordWrongAnswer, logOperation,
   } = useGameStore()
 
   const profiles = useProfileStore(s => s.profiles)
@@ -46,6 +49,9 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null)
   const [duelPhase, setDuelPhase] = useState<DuelPhase>('p1')
   const [botLastAnswer, setBotLastAnswer] = useState<'correct' | 'wrong' | null>(null)
+  const [typedAnswer, setTypedAnswer] = useState('')
+  const [keyboardState, setKeyboardState] = useState<'idle' | 'correct' | 'wrong'>('idle')
+  const inputRef = useRef<HTMLInputElement>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const globalTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const botCorrectRef = useRef(0)
@@ -118,7 +124,10 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
     setFeedback(null)
     setLocked(false)
     setBotLastAnswer(null)
+    setTypedAnswer('')
+    setKeyboardState('idle')
     if (config.timePerQuestion) setTimeLeft(config.timePerQuestion)
+    if (inputMode === 'keyboard') setTimeout(() => inputRef.current?.focus(), 50)
   }, [currentIndex, config, isInfinite, isPractice, questions, duelPhase])
 
   useEffect(() => {
@@ -209,9 +218,12 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
       }, delay)
     }
 
+    logOperation(currentQuestion.operation, isCorrect)
+
     if (isCorrect) {
       play(streak >= 4 ? 'streak' : 'correct')
       navigator.vibrate?.(40)
+      setKeyboardState('correct')
       const msgs = streak >= 5 ? t.gearMessages : t.correctMessages
       setFeedback(msgs[Math.floor(Math.random() * msgs.length)])
       answerQuestion(true, currentQuestion.pointValue)
@@ -219,8 +231,12 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
     } else {
       play('wrong')
       navigator.vibrate?.([60, 40, 60])
+      setKeyboardState('wrong')
       recordWrongAnswer(currentQuestion.display, currentQuestion.correctAnswer, answer)
-      setFeedback(t.wrongMessages[Math.floor(Math.random() * t.wrongMessages.length)])
+      const wrongFeedback = inputMode === 'keyboard'
+        ? `✓ ${currentQuestion.correctAnswer}`
+        : t.wrongMessages[Math.floor(Math.random() * t.wrongMessages.length)]
+      setFeedback(wrongFeedback)
       answerQuestion(false, 0)
 
       const delay = config.mode === 'blitz' ? 600 : 900
@@ -387,17 +403,44 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
         </div>
 
         {/* Answers */}
-        <div className="grid grid-cols-2 gap-3">
-          {currentQuestion.allAnswers.map(a => (
-            <AnswerButton
-              key={`${currentQuestion.id}-${a}`}
-              label={a}
-              state={answerStates[a] ?? 'idle'}
+        {inputMode === 'keyboard' ? (
+          <div className="flex gap-3">
+            <input
+              ref={inputRef}
+              type="text"
+              inputMode="numeric"
+              value={typedAnswer}
+              onChange={e => setTypedAnswer(e.target.value.replace(/[^0-9\-]/g, ''))}
+              onKeyDown={e => { if (e.key === 'Enter' && !locked && typedAnswer.trim()) handleAnswer(typedAnswer.trim()) }}
               disabled={locked}
-              onClick={() => handleAnswer(a)}
+              placeholder={t.typeYourAnswer}
+              className={`flex-1 text-center font-bangers text-4xl rounded-2xl py-5 outline-none border-2 transition-colors ${
+                keyboardState === 'correct' ? 'bg-emerald-400/15 border-emerald-400 text-emerald-300'
+                : keyboardState === 'wrong'   ? 'bg-pirate-red/15 border-pirate-red text-pirate-red'
+                : 'bg-navy-700 border-navy-600 text-white focus:border-gold-400'
+              }`}
             />
-          ))}
-        </div>
+            <button
+              onClick={() => { if (!locked && typedAnswer.trim()) handleAnswer(typedAnswer.trim()) }}
+              disabled={locked || !typedAnswer.trim()}
+              className="px-6 rounded-2xl font-bangers text-3xl bg-gold-400 text-navy-900 disabled:opacity-30 transition-opacity [@media(hover:hover)]:hover:bg-gold-500"
+            >
+              ✓
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {currentQuestion.allAnswers.map(a => (
+              <AnswerButton
+                key={`${currentQuestion.id}-${a}`}
+                label={a}
+                state={answerStates[a] ?? 'idle'}
+                disabled={locked}
+                onClick={() => handleAnswer(a)}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Counter */}
         <p className="text-center font-nunito text-xs text-gray-500 pb-1">
