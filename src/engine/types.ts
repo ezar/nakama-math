@@ -37,7 +37,13 @@ export interface Question {
 export type GameMode =
   | 'normal' | 'speed' | 'survival' | 'blitz'
   | 'versus' | 'duel'
-  | 'timeTrial' | 'practice'
+  | 'timeTrial' | 'practice' | 'errorDrill'
+
+export interface StoredQuestion {
+  display: string
+  correctAnswer: number
+  operation: Operation
+}
 
 export interface BotConfig {
   id: string
@@ -93,6 +99,8 @@ export interface Profile {
   operationStats?: Partial<Record<Operation, { correct: number; attempted: number }>>
   ownedAvatars?: string[]
   activityDates?: string[]
+  wrongQuestions?: StoredQuestion[]
+  hasSeenTutorial?: boolean
 }
 
 export interface BotSnap {

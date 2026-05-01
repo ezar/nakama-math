@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Profile, RecentGame, Operation, OperationEntry } from '../engine/types'
+import type { Profile, RecentGame, Operation, OperationEntry, StoredQuestion } from '../engine/types'
 
 interface ProfileStore {
   profiles: Profile[]
@@ -17,6 +17,8 @@ interface ProfileStore {
   completeDailyChallenge: (id: string, todayStr: string, yesterdayStr: string) => void
   changeAvatar: (id: string, avatar: string) => void
   addOwnedAvatar: (id: string, avatar: string) => void
+  addWrongQuestions: (id: string, questions: StoredQuestion[]) => void
+  markTutorialSeen: (id: string) => void
   currentProfile: () => Profile | null
 }
 
@@ -136,6 +138,23 @@ export const useProfileStore = create<ProfileStore>()(
       addOwnedAvatar: (id, avatar) => set(state => ({
         profiles: state.profiles.map(p =>
           p.id === id ? { ...p, ownedAvatars: [...(p.ownedAvatars ?? []), avatar] } : p
+        ),
+      })),
+
+      addWrongQuestions: (id, questions) => set(state => ({
+        profiles: state.profiles.map(p => {
+          if (p.id !== id) return p
+          const existing = p.wrongQuestions ?? []
+          const deduped = [...questions, ...existing]
+            .filter((q, i, arr) => arr.findIndex(x => x.display === q.display) === i)
+            .slice(0, 50)
+          return { ...p, wrongQuestions: deduped }
+        }),
+      })),
+
+      markTutorialSeen: (id) => set(state => ({
+        profiles: state.profiles.map(p =>
+          p.id === id ? { ...p, hasSeenTutorial: true } : p
         ),
       })),
 

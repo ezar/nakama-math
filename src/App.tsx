@@ -5,12 +5,13 @@ import { HubScreen } from './screens/HubScreen'
 import { GameScreen } from './screens/GameScreen'
 import { ResultsScreen } from './screens/ResultsScreen'
 import { RankingScreen } from './screens/RankingScreen'
+import { SettingsScreen } from './screens/SettingsScreen'
 import { SplashScreen } from './screens/SplashScreen'
 import { Footer } from './components/Footer'
 import { OfflineBanner } from './components/OfflineBanner'
 import { UpdateBanner } from './components/UpdateBanner'
 
-type Screen = 'intro' | 'hub' | 'game' | 'results' | 'ranking'
+type Screen = 'intro' | 'hub' | 'game' | 'results' | 'ranking' | 'settings'
 
 const screenVariants = {
   initial: { opacity: 0, x: 40 },
@@ -60,6 +61,7 @@ export default function App() {
             <HubScreen
               onPlay={() => setScreen('game')}
               onBack={() => setScreen('intro')}
+              onSettings={() => setScreen('settings')}
             />
           )}
           {screen === 'game' && (
@@ -77,6 +79,11 @@ export default function App() {
           {screen === 'ranking' && (
             <RankingScreen
               onBack={() => setScreen('intro')}
+            />
+          )}
+          {screen === 'settings' && (
+            <SettingsScreen
+              onBack={() => setScreen('hub')}
             />
           )}
         </motion.div>

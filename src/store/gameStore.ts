@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Question, GameConfig, GameResult, BotSnap, DuelP1Snap, WrongAnswer, Operation, OperationEntry } from '../engine/types'
+import type { Question, GameConfig, GameResult, BotSnap, DuelP1Snap, WrongAnswer, Operation, OperationEntry, StoredQuestion } from '../engine/types'
 
 interface GameStore {
   config: GameConfig | null
@@ -17,11 +17,13 @@ interface GameStore {
   pendingDuelP1Snap: DuelP1Snap | null
   wrongAnswers: WrongAnswer[]
   operationLog: OperationEntry[]
+  wrongLog: StoredQuestion[]
 
   startGame: (config: GameConfig, questions: Question[]) => void
   answerQuestion: (isCorrect: boolean, pointValue: number) => void
   recordWrongAnswer: (display: string, correctAnswer: number, userAnswer: string) => void
   logOperation: (operation: Operation, correct: boolean) => void
+  logWrong: (display: string, correctAnswer: number, operation: Operation) => void
   loseLife: () => void
   nextQuestion: () => void
   finishGame: () => void
@@ -53,6 +55,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
   pendingDuelP1Snap: null,
   wrongAnswers: [],
   operationLog: [],
+  wrongLog: [],
 
   startGame: (config, questions) => set({
     config,
@@ -70,6 +73,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     pendingDuelP1Snap: null,
     wrongAnswers: [],
     operationLog: [],
+    wrongLog: [],
   }),
 
   recordWrongAnswer: (display, correctAnswer, userAnswer) => set(state => ({
@@ -78,6 +82,10 @@ export const useGameStore = create<GameStore>()((set, get) => ({
 
   logOperation: (operation, correct) => set(state => ({
     operationLog: [...state.operationLog, { operation, correct }],
+  })),
+
+  logWrong: (display, correctAnswer, operation) => set(state => ({
+    wrongLog: [...state.wrongLog, { display, correctAnswer, operation }],
   })),
 
   answerQuestion: (isCorrect, pointValue) => set(state => {
@@ -133,6 +141,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     pendingDuelP1Snap: null,
     wrongAnswers: [],
     operationLog: [],
+    wrongLog: [],
   }),
 
   setPendingBotSnap: (snap) => set({ pendingBotSnap: snap }),
@@ -155,6 +164,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     berriesEarned: 0,
     isFinished: false,
     operationLog: [],
+    wrongLog: [],
   })),
 
   currentQuestion: () => {

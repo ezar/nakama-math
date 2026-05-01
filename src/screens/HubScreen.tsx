@@ -9,7 +9,7 @@ import { AchievementGallery } from '../components/AchievementGallery'
 import { StreakCalendar } from '../components/StreakCalendar'
 import { ShopModal } from '../components/ShopModal'
 import { getUnlockedLevels, getLevelById, LEVELS } from '../config/levels'
-import { generateQuestion } from '../engine/QuestionEngine'
+import { generateQuestion, makeErrorDrillQuestion } from '../engine/QuestionEngine'
 import { getRankIndex, getNextRankBerries } from '../utils/rankSystem'
 import { BOTS } from '../config/bots'
 import { getDailyQuestions, DAILY_MULTIPLIER, todayDateString } from '../config/dailyChallenge'
@@ -31,9 +31,10 @@ const DIFFICULTY_STARS = [1, 2, 3, 4]
 interface HubScreenProps {
   onPlay: () => void
   onBack: () => void
+  onSettings: () => void
 }
 
-export function HubScreen({ onPlay, onBack }: HubScreenProps) {
+export function HubScreen({ onPlay, onBack, onSettings }: HubScreenProps) {
   const t = useTranslation()
   const locale = useSettingsStore(s => s.locale) as Locale
   const profiles = useProfileStore(s => s.profiles)
@@ -47,6 +48,7 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
   const [selectedLevel, setSelectedLevel] = useState<LevelConfig>(unlockedLevels[unlockedLevels.length - 1])
   const inputMode = useSettingsStore(s => s.inputMode)
   const toggleInputMode = useSettingsStore(s => s.toggleInputMode)
+  const markTutorialSeen = useProfileStore(s => s.markTutorialSeen)
 
   const [showLevelPicker, setShowLevelPicker] = useState(false)
   const [showAchievements, setShowAchievements] = useState(false)
@@ -54,6 +56,8 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
   const [showDuelPicker, setShowDuelPicker] = useState(false)
   const [showPracticePicker, setShowPracticePicker] = useState(false)
   const [showShop, setShowShop] = useState(false)
+  const [tutorialStep, setTutorialStep] = useState(0)
+  const showTutorial = !profile.hasSeenTutorial
 
   const rankIdx = getRankIndex(profile.berries)
   const nextBerries = getNextRankBerries(profile.berries)
@@ -148,6 +152,22 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
     onPlay()
   }
 
+  function launchErrorDrill() {
+    if (!profile) return
+    const wrong = profile.wrongQuestions ?? []
+    if (wrong.length === 0) return
+    const shuffled = [...wrong].sort(() => Math.random() - 0.5).slice(0, 10)
+    const questions = shuffled.map(sq => makeErrorDrillQuestion(sq.display, sq.correctAnswer, sq.operation))
+    const config: GameConfig = {
+      mode: 'errorDrill',
+      levelId: 1,
+      totalQuestions: questions.length,
+      multiplier: 0,
+    }
+    startGame(config, questions)
+    onPlay()
+  }
+
   const coreModes: CoreMode[] = ['normal', 'speed', 'survival', 'blitz']
   const isMaxLevel = unlockedLevels.length === 1
   const otherProfiles = profiles.filter(p => p.id !== currentProfileId)
@@ -203,6 +223,13 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
                   {(profile.achievements ?? []).length}
                 </span>
               )}
+            </button>
+            <button
+              onClick={onSettings}
+              className="text-gray-500 hover:text-white transition-colors text-xl"
+              title={t.settingsTitle}
+            >
+              ⚙️
             </button>
           </div>
         </div>
@@ -306,6 +333,24 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
             <span className="text-2xl">📚</span>
             <p className="font-bangers text-base text-white">{t.modes.practice.name}</p>
             <p className="font-nunito text-xs text-gray-400 text-center leading-tight">{t.modes.practice.desc}</p>
+          </motion.button>
+
+          <motion.button
+            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.36 }}
+            whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
+            onClick={(profile.wrongQuestions ?? []).length > 0 ? launchErrorDrill : undefined}
+            disabled={(profile.wrongQuestions ?? []).length === 0}
+            className={`flex flex-col items-center gap-1 py-3 px-2 bg-navy-700 rounded-2xl border-2 border-navy-600 transition-colors ${
+              (profile.wrongQuestions ?? []).length > 0
+                ? '[@media(hover:hover)]:hover:bg-navy-600 [@media(hover:hover)]:hover:border-gold-400 cursor-pointer'
+                : 'opacity-40 cursor-not-allowed'
+            }`}
+          >
+            <span className="text-2xl">🎯</span>
+            <p className="font-bangers text-base text-white">{t.modes.errorDrill.name}</p>
+            <p className="font-nunito text-xs text-gray-400 text-center leading-tight">
+              {(profile.wrongQuestions ?? []).length === 0 ? t.noErrorsYet : t.modes.errorDrill.desc}
+            </p>
           </motion.button>
         </div>
 
@@ -539,6 +584,64 @@ export function HubScreen({ onPlay, onBack }: HubScreenProps) {
       <AnimatePresence>
         {showShop && (
           <ShopModal profileId={currentProfileId!} onClose={() => setShowShop(false)} />
+        )}
+      </AnimatePresence>
+
+      {/* Onboarding tutorial */}
+      <AnimatePresence>
+        {showTutorial && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 flex items-end justify-center z-50 p-4"
+          >
+            <motion.div
+              initial={{ y: 80, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 80, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 280, damping: 26 }}
+              className="bg-navy-800 rounded-3xl p-6 w-full max-w-sm border border-navy-600 shadow-2xl flex flex-col gap-4"
+            >
+              <p className="font-bangers text-xl text-gold-400 text-center tracking-widest">{t.tutorialTitle}</p>
+
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={tutorialStep}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="flex flex-col items-center gap-2 text-center min-h-[80px] justify-center"
+                >
+                  <p className="font-bangers text-2xl text-white">{t.tutorialSlides[tutorialStep].title}</p>
+                  <p className="font-nunito text-sm text-gray-400 leading-relaxed">{t.tutorialSlides[tutorialStep].body}</p>
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Dot indicators */}
+              <div className="flex justify-center gap-1.5">
+                {t.tutorialSlides.map((_, i) => (
+                  <div key={i} className={`rounded-full transition-all ${i === tutorialStep ? 'w-4 h-1.5 bg-gold-400' : 'w-1.5 h-1.5 bg-navy-600'}`} />
+                ))}
+              </div>
+
+              {tutorialStep < t.tutorialSlides.length - 1 ? (
+                <button
+                  onClick={() => setTutorialStep(s => s + 1)}
+                  className="w-full py-3 rounded-xl font-nunito font-bold text-navy-900 bg-gold-400 hover:bg-gold-300 transition-colors"
+                >
+                  →
+                </button>
+              ) : (
+                <button
+                  onClick={() => markTutorialSeen(currentProfileId!)}
+                  className="w-full py-3 rounded-xl font-bangers text-xl tracking-widest text-navy-900 bg-gold-400 hover:bg-gold-300 transition-colors"
+                >
+                  {t.tutorialStart}
+                </button>
+              )}
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
       </div>

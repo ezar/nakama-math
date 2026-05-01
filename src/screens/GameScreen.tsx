@@ -32,8 +32,10 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
     config, questions, currentIndex,
     streak, lives,
     answerQuestion, loseLife, nextQuestion, finishGame, resetGame,
-    setPendingBotSnap, startDuelP2, recordWrongAnswer, logOperation,
+    setPendingBotSnap, startDuelP2, recordWrongAnswer, logOperation, logWrong,
   } = useGameStore()
+
+  const spendBerries = useProfileStore(s => s.spendBerries)
 
   const profiles = useProfileStore(s => s.profiles)
   const currentProfileId = useProfileStore(s => s.currentProfileId)
@@ -62,8 +64,16 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
   const isSurvival = config?.mode === 'survival'
   const isTimeTrial = config?.mode === 'timeTrial'
   const isPractice = config?.mode === 'practice'
+  const isErrorDrill = config?.mode === 'errorDrill'
   const isInfinite = isSurvival || isTimeTrial || isPractice
   const hasTimer = !!config?.timePerQuestion
+  const showPowerups = !isPractice && !isTimeTrial && !isErrorDrill && !isVersus && !isDuel && inputMode !== 'keyboard'
+
+  // Power-up state
+  const [powersUsed, setPowersUsed] = useState<Set<string>>(new Set())
+  const [eliminated, setEliminated] = useState<string[]>([])
+  const [freezeActive, setFreezeActive] = useState(false)
+  const freezeRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Initialize 60-second global countdown for timeTrial
   useEffect(() => {
@@ -126,18 +136,19 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
     setBotLastAnswer(null)
     setTypedAnswer('')
     setKeyboardState('idle')
+    setEliminated([])
     if (config.timePerQuestion) setTimeLeft(config.timePerQuestion)
     if (inputMode === 'keyboard') setTimeout(() => inputRef.current?.focus(), 50)
   }, [currentIndex, config, isInfinite, isPractice, questions, duelPhase])
 
   useEffect(() => {
-    if (!hasTimer || !timeLeft || locked) return
+    if (!hasTimer || !timeLeft || locked || freezeActive) return
     if (timeLeft <= 3 && timeLeft > 0) play('tick')
     timerRef.current = setInterval(() => {
       setTimeLeft(prev => (prev === null || prev <= 1) ? 0 : prev - 1)
     }, 1000)
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [timeLeft, hasTimer, locked, play])
+  }, [timeLeft, hasTimer, locked, freezeActive, play])
 
   useEffect(() => {
     if (timeLeft !== 0) return
@@ -219,6 +230,7 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
     }
 
     logOperation(currentQuestion.operation, isCorrect)
+    if (!isCorrect) logWrong(currentQuestion.display, currentQuestion.correctAnswer, currentQuestion.operation)
 
     if (isCorrect) {
       play(streak >= 4 ? 'streak' : 'correct')
@@ -263,6 +275,30 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
     }
   }
 
+  function usePowerup(type: 'freeze' | 'eliminate' | 'skip') {
+    if (locked || !currentQuestion || !currentProfileId) return
+    const costs = { freeze: 20, eliminate: 15, skip: 25 }
+    const cost = costs[type]
+    const ok = spendBerries(currentProfileId, cost)
+    if (!ok) return
+    setPowersUsed(prev => new Set([...prev, type]))
+
+    if (type === 'freeze') {
+      setFreezeActive(true)
+      if (timerRef.current) clearInterval(timerRef.current)
+      freezeRef.current = setTimeout(() => {
+        setFreezeActive(false)
+      }, 5000)
+    } else if (type === 'eliminate') {
+      const wrong = currentQuestion.allAnswers.filter(a => a !== String(currentQuestion.correctAnswer))
+      const toElim = wrong.sort(() => Math.random() - 0.5).slice(0, 2)
+      setEliminated(toElim)
+    } else if (type === 'skip') {
+      if (timerRef.current) clearInterval(timerRef.current)
+      advance(true)
+    }
+  }
+
   function handleExit() {
     if (timerRef.current) clearInterval(timerRef.current)
     if (globalTimerRef.current) clearInterval(globalTimerRef.current)
@@ -277,7 +313,7 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
     </div>
   )
 
-  const progress = isInfinite ? null : ((currentIndex + 1) / config.totalQuestions)
+  const progress = (isInfinite || isErrorDrill) ? null : ((currentIndex + 1) / config.totalQuestions)
   const currentPlayer = isDuel ? (duelPhase === 'p2' ? p2Profile : p1Profile) : null
 
   return (
@@ -302,7 +338,7 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
             <div className="flex-1">
               <HpBar current={lives} max={config.livesCount ?? 3} />
             </div>
-          ) : isTimeTrial || isPractice ? (
+          ) : isTimeTrial || isPractice || isErrorDrill ? (
             <div className="flex-1" />
           ) : (
             <div className="flex-1 h-2 bg-navy-700 rounded-full overflow-hidden">
@@ -402,6 +438,35 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
           </AnimatePresence>
         </div>
 
+        {/* Power-ups */}
+        {showPowerups && (
+          <div className="flex gap-2 justify-center">
+            {([
+              { type: 'freeze' as const, label: t.powerupFreeze, cost: 20, disabled: !hasTimer },
+              { type: 'eliminate' as const, label: t.powerupEliminate, cost: 15, disabled: false },
+              { type: 'skip' as const, label: t.powerupSkip, cost: 25, disabled: false },
+            ]).map(({ type, label, cost, disabled }) => {
+              const used = powersUsed.has(type)
+              const canAfford = (p1Profile?.berries ?? 0) >= cost
+              return (
+                <button
+                  key={type}
+                  onClick={() => !used && !disabled && usePowerup(type)}
+                  disabled={used || disabled || !canAfford}
+                  className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl border text-center transition-colors ${
+                    used || disabled || !canAfford
+                      ? 'border-navy-700 text-gray-600 opacity-40 cursor-not-allowed'
+                      : 'border-gold-400/50 text-gold-400 bg-gold-400/10 hover:bg-gold-400/20 cursor-pointer'
+                  }`}
+                >
+                  <span className="font-nunito text-xs font-bold">{label}</span>
+                  <span className="font-nunito text-[9px] text-gray-500">{cost} 🪙</span>
+                </button>
+              )
+            })}
+          </div>
+        )}
+
         {/* Answers */}
         {inputMode === 'keyboard' ? (
           <div className="flex gap-3">
@@ -434,8 +499,8 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
               <AnswerButton
                 key={`${currentQuestion.id}-${a}`}
                 label={a}
-                state={answerStates[a] ?? 'idle'}
-                disabled={locked}
+                state={eliminated.includes(a) ? 'wrong' : (answerStates[a] ?? 'idle')}
+                disabled={locked || eliminated.includes(a)}
                 onClick={() => handleAnswer(a)}
               />
             ))}
@@ -446,7 +511,7 @@ export function GameScreen({ onFinish, onExit }: GameScreenProps) {
         <p className="text-center font-nunito text-xs text-gray-500 pb-1">
           {isSurvival ? t.lives(lives)
             : isTimeTrial ? `${currentIndex + 1} ✓`
-            : isPractice ? `${currentIndex + 1}`
+            : isPractice || isErrorDrill ? `${currentIndex + 1}`
             : `${currentIndex + 1} / ${config.totalQuestions}`}
         </p>
       </div>

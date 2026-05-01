@@ -72,8 +72,8 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
   const t = useTranslation()
   const locale = useSettingsStore(s => s.locale) as Locale
   const { play } = useSoundEffect()
-  const { lastResult, resetGame, wrongAnswers, operationLog } = useGameStore()
-  const { currentProfile, addBerries, updateStats, updateOperationStats, unlockAchievement, addRecentGame, completeDailyChallenge } = useProfileStore()
+  const { lastResult, resetGame, wrongAnswers, operationLog, wrongLog } = useGameStore()
+  const { currentProfile, addBerries, updateStats, updateOperationStats, unlockAchievement, addRecentGame, completeDailyChallenge, addWrongQuestions } = useProfileStore()
   const profile = currentProfile()
   const committed = useRef(false)
   const [showRankUp, setShowRankUp] = useState(false)
@@ -101,6 +101,7 @@ export function ResultsScreen({ onPlayAgain, onBack }: ResultsScreenProps) {
 
     // Update current player (P2 in duel, solo player in other modes)
     if (operationLog.length > 0) updateOperationStats(profile.id, operationLog)
+    if (wrongLog.length > 0 && lastResult.mode !== 'errorDrill') addWrongQuestions(profile.id, wrongLog)
     addBerries(profile.id, lastResult.berriesEarned)
     updateStats(profile.id, lastResult.correct, lastResult.attempted, lastResult.maxStreak)
     addRecentGame(profile.id, {

@@ -22,6 +22,7 @@ export interface Translations {
     duel: { name: string; desc: string }
     timeTrial: { name: string; desc: string }
     practice: { name: string; desc: string }
+    errorDrill: { name: string; desc: string }
   }
 
   loadingChallenge: string
@@ -105,6 +106,17 @@ export interface Translations {
   equipLabel: string
   ownedLabel: string
   notEnoughBerries: string
+
+  settingsTitle: string
+  errorDrillTitle: string
+  errorDrillDesc: string
+  noErrorsYet: string
+  powerupFreeze: string
+  powerupEliminate: string
+  powerupSkip: string
+  tutorialTitle: string
+  tutorialSlides: { title: string; body: string }[]
+  tutorialStart: string
 }
 
 export const translations: Record<Locale, Translations> = {
@@ -129,6 +141,7 @@ export const translations: Record<Locale, Translations> = {
       duel:      { name: 'Duelo Local',   desc: 'Turnos con otro pirata' },
       timeTrial: { name: 'Contrarreloj',  desc: '60 seg · ¿Cuántas puedes?' },
       practice:  { name: 'Práctica',      desc: 'Sin puntos · elige operación' },
+      errorDrill: { name: 'Repaso',        desc: 'Practica tus errores anteriores' },
     },
     loadingChallenge: 'Cargando reto...',
     lives: (n) => `${n} ${n === 1 ? 'vida' : 'vidas'}`,
@@ -202,6 +215,21 @@ export const translations: Record<Locale, Translations> = {
     equipLabel: 'Equipar',
     ownedLabel: '✓',
     notEnoughBerries: 'Berries insuficientes',
+    settingsTitle: 'Ajustes',
+    errorDrillTitle: '🎯 Repaso de Errores',
+    errorDrillDesc: 'Practica las preguntas que fallaste',
+    noErrorsYet: '¡Aún no hay errores guardados!',
+    powerupFreeze: '⏸ +5s',
+    powerupEliminate: '✂️ ×2',
+    powerupSkip: '⏭ Saltar',
+    tutorialTitle: '¡Bienvenido a bordo!',
+    tutorialSlides: [
+      { title: '⚔️ Responde preguntas', body: 'Elige la respuesta correcta antes de que acabe el tiempo.' },
+      { title: '🪙 Gana Berries', body: 'Cada acierto te da Berries. Las rachas multiplican tus puntos.' },
+      { title: '⚓ Reto Diario', body: 'Completa el reto diario para ganar ×3 Berries y mantener tu racha.' },
+      { title: '🏴‍☠️ ¡A la aventura!', body: '¡Juega tu primera batalla y demuestra que eres digno pirata!' },
+    ],
+    tutorialStart: '⚔️ ¡Empezar!',
   },
 
   en: {
@@ -225,6 +253,7 @@ export const translations: Record<Locale, Translations> = {
       duel:      { name: 'Local Duel',  desc: 'Take turns with another pirate' },
       timeTrial: { name: 'Time Trial',  desc: '60 sec · how many can you get?' },
       practice:  { name: 'Practice',    desc: 'No score · choose operation' },
+      errorDrill: { name: 'Review',      desc: 'Practice your previous mistakes' },
     },
     loadingChallenge: 'Loading challenge...',
     lives: (n) => `${n} ${n === 1 ? 'life' : 'lives'}`,
@@ -298,6 +327,21 @@ export const translations: Record<Locale, Translations> = {
     equipLabel: 'Equip',
     ownedLabel: '✓',
     notEnoughBerries: 'Not enough berries',
+    settingsTitle: 'Settings',
+    errorDrillTitle: '🎯 Error Review',
+    errorDrillDesc: 'Practice the questions you got wrong',
+    noErrorsYet: 'No mistakes saved yet!',
+    powerupFreeze: '⏸ +5s',
+    powerupEliminate: '✂️ ×2',
+    powerupSkip: '⏭ Skip',
+    tutorialTitle: 'Welcome aboard!',
+    tutorialSlides: [
+      { title: '⚔️ Answer questions', body: 'Pick the correct answer before time runs out.' },
+      { title: '🪙 Earn Berries', body: 'Every correct answer earns Berries. Streaks multiply your score.' },
+      { title: '⚓ Daily Challenge', body: 'Complete the daily challenge for ×3 Berries and keep your streak.' },
+      { title: '🏴‍☠️ Adventure awaits!', body: 'Play your first battle and prove your worth as a pirate!' },
+    ],
+    tutorialStart: '⚔️ Let\'s go!',
   },
 
   ca: {
@@ -321,6 +365,7 @@ export const translations: Record<Locale, Translations> = {
       duel:      { name: 'Duel Local',    desc: 'Torns amb un altre pirata' },
       timeTrial: { name: 'Contrarellotge', desc: '60 seg · quantes pots?' },
       practice:  { name: 'Pràctica',      desc: 'Sense punts · tria operació' },
+      errorDrill: { name: 'Repàs',         desc: 'Practica els teus errors anteriors' },
     },
     loadingChallenge: 'Carregant repte...',
     lives: (n) => `${n} ${n === 1 ? 'vida' : 'vides'}`,
@@ -394,5 +439,20 @@ export const translations: Record<Locale, Translations> = {
     equipLabel: 'Equipar',
     ownedLabel: '✓',
     notEnoughBerries: 'Berries insuficients',
+    settingsTitle: 'Configuració',
+    errorDrillTitle: '🎯 Repàs d\'Errors',
+    errorDrillDesc: 'Practica les preguntes que vas fallar',
+    noErrorsYet: 'Encara no hi ha errors desats!',
+    powerupFreeze: '⏸ +5s',
+    powerupEliminate: '✂️ ×2',
+    powerupSkip: '⏭ Saltar',
+    tutorialTitle: 'Benvingut a bord!',
+    tutorialSlides: [
+      { title: '⚔️ Respon preguntes', body: 'Tria la resposta correcta abans que acabi el temps.' },
+      { title: '🪙 Guanya Berries', body: 'Cada encert et dóna Berries. Les racxes multipliquen la puntuació.' },
+      { title: '⚓ Repte Diari', body: 'Completa el repte diari per guanyar ×3 Berries i mantenir la teva ratxa.' },
+      { title: '🏴‍☠️ A l\'aventura!', body: 'Juga la teva primera batalla i demostra que ets un pirata de debò!' },
+    ],
+    tutorialStart: '⚔️ Endavant!',
   },
 }

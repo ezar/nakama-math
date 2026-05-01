@@ -147,6 +147,38 @@ function generateDecoys(op: Operation, a: number, b: number, correct: number, rn
   return result.slice(0, 3)
 }
 
+export function makeErrorDrillQuestion(display: string, correctAnswer: number, operation: Operation): Question {
+  const candidates = new Set<number>()
+  const add = (n: number) => { const r = Math.round(n); if (r !== correctAnswer && r >= 0) candidates.add(r) }
+  add(correctAnswer + 1); add(correctAnswer - 1); add(correctAnswer + 2); add(correctAnswer - 2)
+  add(correctAnswer + 5); add(correctAnswer - 5); add(correctAnswer + 10); add(correctAnswer - 10)
+  add(Math.round(correctAnswer * 1.5)); add(Math.round(correctAnswer * 0.75))
+
+  const decoys = Array.from(candidates)
+  while (decoys.length < 3) {
+    const noise = Math.round((Math.random() - 0.5) * Math.max(10, correctAnswer * 0.4))
+    const c = correctAnswer + noise
+    if (c !== correctAnswer && c >= 0 && !decoys.includes(c)) decoys.push(c)
+  }
+
+  const allAnswers = [String(correctAnswer), ...decoys.slice(0, 3).map(String)]
+  for (let i = allAnswers.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[allAnswers[i], allAnswers[j]] = [allAnswers[j], allAnswers[i]]
+  }
+
+  return {
+    id: crypto.randomUUID(),
+    display,
+    operands: [],
+    operation,
+    correctAnswer,
+    allAnswers,
+    pointValue: 0,
+    opChar: '🎯',
+  }
+}
+
 export function generateQuestion(config: LevelConfig, rng: RNG = Math.random): Question {
   const op = pickOperation(config.operations, rng)
   const [a, b] = pickOperands(op, config.constraints, rng)
