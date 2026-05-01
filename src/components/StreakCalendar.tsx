@@ -7,14 +7,14 @@ interface StreakCalendarProps {
 }
 
 export function StreakCalendar({ activityDates, lastDailyDate, label }: StreakCalendarProps) {
-  const WEEKS = 10
+  const WEEKS = 14
 
   const days = useMemo(() => {
     const set = new Set(activityDates)
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
-    // Find the Monday of the current week (dow: 0=Sun→back 6, 1=Mon→back 0, …)
+    // Start from the Monday of the current week, go back WEEKS-1 weeks
     const dow = today.getDay()
     const daysToMonday = dow === 0 ? 6 : dow - 1
     const startDate = new Date(today)
@@ -34,25 +34,25 @@ export function StreakCalendar({ activityDates, lastDailyDate, label }: StreakCa
   return (
     <div className="flex flex-col gap-1">
       <p className="font-nunito text-xs text-gray-500">{label}</p>
-      <div className="flex gap-0.5">
-        {/* Day labels column */}
-        <div className="flex flex-col gap-0.5 mr-1">
+      <div className="flex gap-0.5 w-full">
+        {/* Day labels — fixed width, same row height as cells */}
+        <div className="flex flex-col gap-0.5 shrink-0 mr-0.5">
           {dayLabels.map(l => (
-            <div key={l} className="w-3 h-3 flex items-center justify-center">
+            <div key={l} className="h-4 w-3 flex items-center justify-center">
               <span className="font-nunito text-[8px] text-gray-600">{l}</span>
             </div>
           ))}
         </div>
-        {/* Week columns */}
+        {/* Week columns — stretch to fill container */}
         {Array.from({ length: WEEKS }, (_, week) => (
-          <div key={week} className="flex flex-col gap-0.5">
+          <div key={week} className="flex-1 flex flex-col gap-0.5">
             {Array.from({ length: 7 }, (_, dow) => {
               const day = days[week * 7 + dow]
               return (
                 <div
                   key={dow}
                   title={day.str}
-                  className={`w-3 h-3 rounded-[2px] transition-colors ${
+                  className={`h-4 rounded-[2px] transition-colors ${
                     day.isFuture   ? 'bg-navy-800'
                     : day.isDaily  ? 'bg-gold-400'
                     : day.active   ? 'bg-emerald-500'
