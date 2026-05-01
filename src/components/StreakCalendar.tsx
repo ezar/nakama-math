@@ -8,21 +8,27 @@ interface StreakCalendarProps {
 
 export function StreakCalendar({ activityDates, lastDailyDate, label }: StreakCalendarProps) {
   const WEEKS = 10
-  const DAYS = WEEKS * 7
 
   const days = useMemo(() => {
     const set = new Set(activityDates)
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    return Array.from({ length: DAYS }, (_, i) => {
-      const d = new Date(today)
-      d.setDate(today.getDate() - (DAYS - 1 - i))
+
+    // Find the Monday of the current week (dow: 0=Sun→back 6, 1=Mon→back 0, …)
+    const dow = today.getDay()
+    const daysToMonday = dow === 0 ? 6 : dow - 1
+    const startDate = new Date(today)
+    startDate.setDate(today.getDate() - daysToMonday - (WEEKS - 1) * 7)
+
+    return Array.from({ length: WEEKS * 7 }, (_, i) => {
+      const d = new Date(startDate)
+      d.setDate(startDate.getDate() + i)
       const str = d.toISOString().slice(0, 10)
-      return { str, active: set.has(str), isDaily: str === lastDailyDate }
+      const isFuture = d > today
+      return { str, active: !isFuture && set.has(str), isDaily: str === lastDailyDate, isFuture }
     })
   }, [activityDates, lastDailyDate])
 
-  // Day-of-week labels (Mon–Sun)
   const dayLabels = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
 
   return (
@@ -47,8 +53,9 @@ export function StreakCalendar({ activityDates, lastDailyDate, label }: StreakCa
                   key={dow}
                   title={day.str}
                   className={`w-3 h-3 rounded-[2px] transition-colors ${
-                    day.isDaily ? 'bg-gold-400'
-                    : day.active  ? 'bg-emerald-500'
+                    day.isFuture   ? 'bg-navy-800'
+                    : day.isDaily  ? 'bg-gold-400'
+                    : day.active   ? 'bg-emerald-500'
                     : 'bg-navy-700'
                   }`}
                 />
